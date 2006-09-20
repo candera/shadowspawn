@@ -1,1 +1,0 @@
-debug\hobocopy /incremental /loglevel=3 /clear /skipdenied /statefile=backup.state C:\data \\valhalla\backup\tear\data\incremental %*
