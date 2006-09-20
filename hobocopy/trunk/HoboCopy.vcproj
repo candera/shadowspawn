@@ -120,7 +120,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\data\backup\HoboCopy\inc\winxp"
+				AdditionalIncludeDirectories="inc\winxp"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -143,7 +143,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="vss_uuid.lib vssapi.lib msxml2.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="C:\data\backup\HoboCopy\lib\winxp\obj\i386"
+				AdditionalLibraryDirectories="lib\winxp\obj\i386"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -199,7 +199,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="C:\data\backup\HoboCopy\inc\winxp"
+				AdditionalIncludeDirectories="inc\winxp"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -220,7 +220,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="vss_uuid.lib vssapi.lib msxml2.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="C:\data\backup\HoboCopy\lib\winxp\obj\i386"
+				AdditionalLibraryDirectories="lib\winxp\obj\i386"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -278,7 +278,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="C:\data\backup\HoboCopy\inc\win2003"
+				AdditionalIncludeDirectories="inc\win2003"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -299,7 +299,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="vss_uuid.lib vssapi.lib msxml2.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="C:\data\backup\HoboCopy\lib\win2003\obj\i386"
+				AdditionalLibraryDirectories="lib\win2003\obj\i386"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -357,7 +357,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\data\backup\HoboCopy\inc\win2003"
+				AdditionalIncludeDirectories="inc\win2003"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -380,7 +380,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="vss_uuid.lib vssapi.lib msxml2.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="C:\data\backup\HoboCopy\lib\win2003\obj\i386"
+				AdditionalLibraryDirectories="lib\win2003\obj\i386"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
