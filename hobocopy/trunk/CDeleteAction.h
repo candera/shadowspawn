@@ -23,13 +23,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
-class CDeleteRecursive : public CRecursiveAction
+#include "Utilities.h"
+#include "OutputWriter.h"
+
+class CDeleteAction : public CDirectoryAction
 {
 private:
     LPCTSTR _target; 
 
 public: 
-    CDeleteRecursive::CDeleteRecursive(LPCTSTR target)
+    CDeleteAction::CDeleteAction(LPCTSTR target)
     {
         _target = target; 
     }
@@ -56,7 +59,7 @@ public:
         {
             CString message; 
             message.AppendFormat(TEXT("Deleted directory %s"), fullPath); 
-            InstrumentationHelper::Log(message, LOG_LEVEL_INFO); 
+            OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
         }
     }
   
@@ -84,7 +87,7 @@ public:
                 CString message; 
                 message.AppendFormat(TEXT("Permission denied when deleting file %s. Resetting read-only bit and retrying."), 
                     fullPath); 
-                InstrumentationHelper::Log(message, LOG_LEVEL_DEBUG); 
+                OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_IF_VERBOSE); 
 
                 DWORD attributes = ::GetFileAttributes(fullPath); 
 
@@ -127,7 +130,7 @@ public:
         {
             CString message; 
             message.AppendFormat(TEXT("Successfully deleted file %s."), fullPath); 
-            InstrumentationHelper::Log(message); 
+            OutputWriter::WriteLine(message); 
         }
     }
 

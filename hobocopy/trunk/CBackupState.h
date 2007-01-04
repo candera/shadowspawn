@@ -23,6 +23,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
+#include "CComException.h"
+#include "OutputWriter.h"
+
 class CBackupState
 {
 private:
@@ -36,18 +39,18 @@ private:
     {
         CString message; 
         message.AppendFormat(TEXT("Creating attribute %s"), name); 
-        InstrumentationHelper::Log(message); 
+        OutputWriter::WriteLine(message); 
         CComPtr<IXMLDOMAttribute> pAttribute; 
         CHECK_HRESULT(document->createAttribute(CComBSTR(name), &pAttribute)); 
 
-        InstrumentationHelper::Log(TEXT("Setting value of attribute."));
+        OutputWriter::WriteLine(TEXT("Setting value of attribute."));
         CHECK_HRESULT(pAttribute->put_text(CComBSTR(value))); 
 
-        InstrumentationHelper::Log(TEXT("Retrieving attributes from parent element.")); 
+        OutputWriter::WriteLine(TEXT("Retrieving attributes from parent element.")); 
         CComPtr<IXMLDOMNamedNodeMap> pAttributes;
         CHECK_HRESULT(parent->get_attributes(&pAttributes)); 
 
-        InstrumentationHelper::Log(TEXT("Adding attribute to parent.")); 
+        OutputWriter::WriteLine(TEXT("Adding attribute to parent.")); 
         CComPtr<IXMLDOMNode> pThrowawayNode; 
         CHECK_HRESULT(pAttributes->setNamedItem(pAttribute, &pThrowawayNode)); 
     }
@@ -57,13 +60,13 @@ private:
     {
         CString message(TEXT("Selecting node for xpath ")); 
         message.Append(xpath); 
-        InstrumentationHelper::Log(message); 
+        OutputWriter::WriteLine(message); 
         CComPtr<IXMLDOMNode> pNode; 
         HRESULT hr = document->selectSingleNode(CComBSTR(xpath), &pNode); 
 
         if (hr == S_FALSE)
         {
-            InstrumentationHelper::Log(TEXT("Unable to find matching node.")); 
+            OutputWriter::WriteLine(TEXT("Unable to find matching node.")); 
             return FALSE; 
         }
         else
@@ -72,7 +75,7 @@ private:
             CHECK_HRESULT(hr); 
         }
 
-        InstrumentationHelper::Log(TEXT("Retrieving text value of node")); 
+        OutputWriter::WriteLine(TEXT("Retrieving text value of node")); 
         CComBSTR bstrLastFullBackup; 
         CHECK_HRESULT(pNode->get_text(&bstrLastFullBackup)); 
 
@@ -84,7 +87,7 @@ private:
         CString dateTime; 
         Utilities::FormatDateTime(pTime, TEXT(" "), false, dateTime);
         message2.Append(dateTime); 
-        InstrumentationHelper::Log(message2); 
+        OutputWriter::WriteLine(message2); 
 
         return true; 
     }
@@ -137,15 +140,15 @@ public:
         _hasLastFullBackup = false; 
         _hasLastIncrementalBackup = false; 
 
-        InstrumentationHelper::Log(TEXT("Creating DOM document object.")); 
+        OutputWriter::WriteLine(TEXT("Creating DOM document object.")); 
         CComPtr<IXMLDOMDocument> stateDocument; 
         CHECK_HRESULT(stateDocument.CoCreateInstance(__uuidof(DOMDocument30))); 
 
         CString message; 
         message.AppendFormat(TEXT("Loading state file from %s."), path); 
-        InstrumentationHelper::Log(message); 
+        OutputWriter::WriteLine(message); 
 
-        InstrumentationHelper::Log(TEXT("Turning off validation")); 
+        OutputWriter::WriteLine(TEXT("Turning off validation")); 
         CHECK_HRESULT(stateDocument->put_validateOnParse(VARIANT_FALSE)); 
 
         VARIANT_BOOL isSuccessful; 
@@ -176,11 +179,11 @@ public:
             CString dateTime; 
             Utilities::FormatDateTime(&_lastFullBackup, TEXT(" "), false, dateTime);
             message.AppendFormat(TEXT("Last full backup time read as %s"), dateTime); 
-            InstrumentationHelper::Log(message); 
+            OutputWriter::WriteLine(message); 
         }
         else
         {
-            InstrumentationHelper::Log(TEXT("Backup file did not have last full backup time recorded.")); 
+            OutputWriter::WriteLine(TEXT("Backup file did not have last full backup time recorded.")); 
         }
 
         _hasLastIncrementalBackup = SelectDateTimeValue(stateDocument, TEXT("/hoboCopyState/@lastIncrementalBackup"), &_lastIncrementalBackup); 
@@ -191,11 +194,11 @@ public:
             CString dateTime; 
             Utilities::FormatDateTime(&_lastIncrementalBackup, TEXT(" "), false, dateTime);
             message.AppendFormat(TEXT("Last incremental backup time read as %s"), dateTime); 
-            InstrumentationHelper::Log(message); 
+            OutputWriter::WriteLine(message); 
         }
         else
         {
-            InstrumentationHelper::Log(TEXT("Backup file did not have last incremental backup time recorded.")); 
+            OutputWriter::WriteLine(TEXT("Backup file did not have last incremental backup time recorded.")); 
         }
     }
 
@@ -208,21 +211,21 @@ public:
 
         CString message; 
         message.AppendFormat(TEXT("Saving backup document to state file %s"), path); 
-        InstrumentationHelper::Log(message, LOG_LEVEL_INFO); 
+        OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
 
-        InstrumentationHelper::Log(TEXT("Backup document:")); 
-        InstrumentationHelper::Log(backupDocument); 
+        OutputWriter::WriteLine(TEXT("Backup document:")); 
+        OutputWriter::WriteLine(backupDocument); 
 
-        InstrumentationHelper::Log(TEXT("Creating DOM document object.")); 
+        OutputWriter::WriteLine(TEXT("Creating DOM document object.")); 
         CComPtr<IXMLDOMDocument> backupDocumentDom; 
         //IXMLDOMDocument* backupDocumentDom; 
         //CHECK_HRESULT(::CoCreateInstance(CLSID_DOMDocument30, NULL, CLSCTX_INPROC, IID_IXMLDOMDocument, (LPVOID*) &backupDocumentDom) 
         CHECK_HRESULT(backupDocumentDom.CoCreateInstance(__uuidof(DOMDocument30))); 
 
-        InstrumentationHelper::Log(TEXT("Turning off validation")); 
+        OutputWriter::WriteLine(TEXT("Turning off validation")); 
         CHECK_HRESULT(backupDocumentDom->put_validateOnParse(VARIANT_FALSE)); 
 
-        InstrumentationHelper::Log(TEXT("Loading backup document into DOM.")); 
+        OutputWriter::WriteLine(TEXT("Loading backup document into DOM.")); 
         VARIANT_BOOL worked; 
         HRESULT hr = backupDocumentDom->loadXML(backupDocument, &worked);
 
@@ -235,10 +238,10 @@ public:
         else if (hr == S_FALSE)
         {
             CComPtr<IXMLDOMParseError> parseError; 
-            InstrumentationHelper::Log(TEXT("Retrieving parse error")); 
+            OutputWriter::WriteLine(TEXT("Retrieving parse error")); 
             CHECK_HRESULT(backupDocumentDom->get_parseError(&parseError)); 
             CComBSTR bstrReason; 
-            InstrumentationHelper::Log(TEXT("Retrieving reason")); 
+            OutputWriter::WriteLine(TEXT("Retrieving reason")); 
             CHECK_HRESULT(parseError->get_reason(&bstrReason));
             CString message; 
             message.Format(TEXT("loadXML failed to parse: %s"), bstrReason); 
@@ -250,56 +253,56 @@ public:
             throw new CHoboCopyException(TEXT("IXMLDOMDocument::loadXML() failed")); 
         }
 
-        InstrumentationHelper::Log(TEXT("Creating state element.")); 
+        OutputWriter::WriteLine(TEXT("Creating state element.")); 
         CComPtr<IXMLDOMElement> pStateElement; 
         CHECK_HRESULT(backupDocumentDom->createElement(CComBSTR(TEXT("hoboCopyState")), 
             &pStateElement)); 
 
         if (_hasLastFullBackup)
         {
-            InstrumentationHelper::Log(TEXT("Creating lastFullBackup attribute")); 
+            OutputWriter::WriteLine(TEXT("Creating lastFullBackup attribute")); 
             CString dateTime; 
             Utilities::FormatDateTime(&_lastFullBackup, TEXT("T"), false, dateTime);
             AppendAttribute(backupDocumentDom, pStateElement, TEXT("lastFullBackup"), dateTime); 
         }
         else
         {
-            InstrumentationHelper::Log(TEXT("No last full backup time was present.")); 
+            OutputWriter::WriteLine(TEXT("No last full backup time was present.")); 
         }
 
         if (_hasLastIncrementalBackup)
         {
-            InstrumentationHelper::Log(TEXT("Creating lastIncrementalBackup attribute")); 
+            OutputWriter::WriteLine(TEXT("Creating lastIncrementalBackup attribute")); 
             CString dateTime; 
             Utilities::FormatDateTime(&_lastIncrementalBackup, TEXT("T"), false, dateTime);
             AppendAttribute(backupDocumentDom, pStateElement, TEXT("lastIncrementalBackup"), dateTime); 
         }
         else
         {
-            InstrumentationHelper::Log(TEXT("No last incremental backup time was present.")); 
+            OutputWriter::WriteLine(TEXT("No last incremental backup time was present.")); 
         }
 
-        InstrumentationHelper::Log(TEXT("Retrieving reference to backup document element.")); 
+        OutputWriter::WriteLine(TEXT("Retrieving reference to backup document element.")); 
         CComPtr<IXMLDOMElement> pBackupDocumentElement; 
         CHECK_HRESULT(backupDocumentDom->get_documentElement(&pBackupDocumentElement)); 
 
         CComPtr<IXMLDOMNode> pThrowawayNode; 
-        InstrumentationHelper::Log(TEXT("Removing backup document element.")); 
+        OutputWriter::WriteLine(TEXT("Removing backup document element.")); 
         CHECK_HRESULT(backupDocumentDom->removeChild(pBackupDocumentElement, &pThrowawayNode)); 
         pThrowawayNode.Release(); 
 
-        InstrumentationHelper::Log(TEXT("Adding backup document element as child of state element.")); 
+        OutputWriter::WriteLine(TEXT("Adding backup document element as child of state element.")); 
         CHECK_HRESULT(pStateElement->appendChild(pBackupDocumentElement, &pThrowawayNode)); 
         pThrowawayNode.Release(); 
 
-        InstrumentationHelper::Log(TEXT("Adding state element as document element.")); 
+        OutputWriter::WriteLine(TEXT("Adding state element as document element.")); 
         CHECK_HRESULT(backupDocumentDom->appendChild(pStateElement, &pThrowawayNode)); 
         pThrowawayNode.Release(); 
 
-        InstrumentationHelper::Log(TEXT("Saving backup document.")); 
+        OutputWriter::WriteLine(TEXT("Saving backup document.")); 
         CHECK_HRESULT(backupDocumentDom->save(CComVariant(path))); 
 
-        InstrumentationHelper::Log(TEXT("Successfully wrote state file"), LOG_LEVEL_INFO); 
+        OutputWriter::WriteLine(TEXT("Successfully wrote state file"), VERBOSITY_THRESHOLD_NORMAL); 
 
     }
 

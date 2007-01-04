@@ -74,6 +74,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="app.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -153,6 +154,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="app.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -232,6 +234,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="app.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -311,6 +314,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="app.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -390,6 +394,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="app.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -428,15 +433,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CCopyAction.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CCopyFilter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\CCopyRecursive.cpp"
+				RelativePath=".\CDeleteAction.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\CDeleteRecursive.cpp"
+				RelativePath=".\CDirectoryAction.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CFilespecCopyFilter.cpp"
 				>
 			</File>
 			<File
@@ -464,7 +477,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\CRecursiveAction.cpp"
+				RelativePath=".\CWriter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CWriterComponent.cpp"
 				>
 			</File>
 			<File
@@ -472,7 +489,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\InstrumentationHelper.cpp"
+				RelativePath=".\OutputWriter.cpp"
 				>
 			</File>
 			<File
@@ -538,15 +555,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CCopyAction.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CCopyFilter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\CCopyRecursive.h"
+				RelativePath=".\CDeleteAction.h"
 				>
 			</File>
 			<File
-				RelativePath=".\CDeleteRecursive.h"
+				RelativePath=".\CDirectoryAction.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CFilespecCopyFilter.h"
 				>
 			</File>
 			<File
@@ -574,11 +599,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\CRecursiveAction.h"
+				RelativePath=".\CWriter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\InstrumentationHelper.h"
+				RelativePath=".\CWriterComponent.h"
+				>
+			</File>
+			<File
+				RelativePath=".\OutputWriter.h"
 				>
 			</File>
 			<File
@@ -596,6 +625,10 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<File
+			RelativePath=".\app.manifest"
+			>
+		</File>
 		<File
 			RelativePath=".\license.txt"
 			>

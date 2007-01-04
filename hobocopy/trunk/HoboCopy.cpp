@@ -26,9 +26,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "CComException.h"
 #include "CHoboCopyException.h"
 #include "COptions.h"
-#include "CRecursiveAction.h"
-#include "CCopyRecursive.h"
-#include "InstrumentationHelper.h"
+#include "CDirectoryAction.h"
+#include "CCopyAction.h"
+#include "OutputWriter.h"
+#include "CBackupState.h"
+#include "CIncludeAllCopyFilter.h"
+#include "CModifiedSinceCopyFilter.h"
+#include "CFilespecCopyFilter.h"
+#include "CDeleteAction.h"
+#include "CWriter.h"
+#include "CWriterComponent.h"
 
 bool s_cancel = false; 
 
@@ -40,16 +47,18 @@ bool Confirm(LPCTSTR message);
 void CopyRecursive(LPCTSTR wszSource, LPCTSTR wszDestination, bool skipDenied, CCopyFilter& filter);
 BOOL WINAPI CtrlHandler(DWORD dwCtrlType); 
 void DeleteRecursive(LPCTSTR target); 
-void RecurseDirectory(LPCTSTR srcbase, CRecursiveAction& action, LPCTSTR directory);
+void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive);
+bool ShouldAddComponent(CWriterComponent& component);
 LPCSTR WideToNarrow(LPCWSTR wsz);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
     //::DebugBreak(); 
 
-    InstrumentationHelper::SetLogLevel(LOG_LEVEL_WARN); 
-    Console::WriteLine(TEXT("HoboCopy (c) 2006 Wangdera Corporation. hobocopy@wangdera.com")); 
-    Console::WriteLine(TEXT("")); 
+    OutputWriter::SetVerbosityLevel(VERBOSITY_LEVEL_NORMAL); 
+    OutputWriter::WriteLine(TEXT("HoboCopy (c) 2006 Wangdera Corporation. hobocopy@wangdera.com"), 
+        VERBOSITY_THRESHOLD_UNLESS_SILENT); 
+    OutputWriter::WriteLine(TEXT(""), VERBOSITY_THRESHOLD_UNLESS_SILENT); 
 
     GUID snapshotSetId = GUID_NULL; 
     bool bSnapshotCreated = false;
@@ -70,9 +79,9 @@ int _tmain(int argc, _TCHAR* argv[])
             ::DebugBreak(); 
         }
 
-        InstrumentationHelper::SetLogLevel((LOG_LEVEL) options.get_LogLevel()); 
+        OutputWriter::SetVerbosityLevel((VERBOSITY_LEVEL) options.get_VerbosityLevel()); 
 
-        InstrumentationHelper::Log(TEXT("Calling CoInitialize")); 
+        OutputWriter::WriteLine(TEXT("Calling CoInitialize")); 
         CHECK_HRESULT(::CoInitialize(NULL)); 
         CHECK_HRESULT(
             ::CoInitializeSecurity(
@@ -91,37 +100,47 @@ int _tmain(int argc, _TCHAR* argv[])
         Utilities::FormatDateTime(&startTime, TEXT(" "), false, startTimeString); 
 
         CString message; 
-        message.AppendFormat(TEXT("Starting a %s backup from %s to %s"), 
+        message.AppendFormat(TEXT("Starting a %s copy from %s to %s"), 
             options.get_BackupType() == VSS_BT_FULL ? TEXT("full") : TEXT("incremental"), 
             options.get_Source(), 
             options.get_Destination()); 
-        InstrumentationHelper::Log(message, LOG_LEVEL_INFO); 
+        OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
 
         if (options.get_ClearDestination())
         {
-            CString message; 
-            message.AppendFormat(TEXT("Recursively deleting destination directory %s."), 
-                options.get_Destination()); 
-            InstrumentationHelper::Log(message, LOG_LEVEL_INFO); 
-
-            bool doDelete = options.get_AcceptAll(); 
-
-            if (!doDelete)
+            if (!Utilities::DirectoryExists(options.get_Destination()))
             {
-                if (Confirm(message))
-                {
-                    doDelete = true; 
-                }
-                else
-                {
-                    InstrumentationHelper::Log(TEXT("Aborting backup."), LOG_LEVEL_INFO); 
-                    return 3; 
-                }
+                CString message; 
+                message.AppendFormat(TEXT("Skipping recursive delete of destination directory %s because it appears not to exist."), 
+                    options.get_Destination()); 
+                OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
             }
-
-            if (doDelete)
+            else
             {
-                DeleteRecursive(options.get_Destination()); 
+                CString message; 
+                message.AppendFormat(TEXT("Recursively deleting destination directory %s."), 
+                    options.get_Destination()); 
+                OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
+
+                bool doDelete = options.get_AcceptAll(); 
+
+                if (!doDelete)
+                {
+                    if (Confirm(message))
+                    {
+                        doDelete = true; 
+                    }
+                    else
+                    {
+                        OutputWriter::WriteLine(TEXT("Aborting backup."), VERBOSITY_THRESHOLD_NORMAL); 
+                        return 3; 
+                    }
+                }
+
+                if (doDelete)
+                {
+                    DeleteRecursive(options.get_Destination()); 
+                }
             }
         }
 
@@ -146,22 +165,22 @@ int _tmain(int argc, _TCHAR* argv[])
         }
 
 
-        InstrumentationHelper::Log(TEXT("Calling CreateVssBackupComponents")); 
+        OutputWriter::WriteLine(TEXT("Calling CreateVssBackupComponents")); 
         CHECK_HRESULT(::CreateVssBackupComponents(&pBackupComponents)); 
 
-        InstrumentationHelper::Log(TEXT("Calling InitializeForBackup")); 
+        OutputWriter::WriteLine(TEXT("Calling InitializeForBackup")); 
         CHECK_HRESULT(pBackupComponents->InitializeForBackup()); 
 
         CComPtr<IVssAsync> pWriterMetadataStatus; 
 
-        InstrumentationHelper::Log(TEXT("Calling GatherWriterMetadata")); 
+        OutputWriter::WriteLine(TEXT("Calling GatherWriterMetadata")); 
         CHECK_HRESULT(pBackupComponents->GatherWriterMetadata(&pWriterMetadataStatus)); 
 
-        InstrumentationHelper::Log(TEXT("Waiting for writer metadata")); 
+        OutputWriter::WriteLine(TEXT("Waiting for writer metadata")); 
         CHECK_HRESULT(pWriterMetadataStatus->Wait()); 
 
         HRESULT hrGatherStatus; 
-        InstrumentationHelper::Log(TEXT("Calling QueryStatus for GatherWriterMetadata")); 
+        OutputWriter::WriteLine(TEXT("Calling QueryStatus for GatherWriterMetadata")); 
         CHECK_HRESULT(pWriterMetadataStatus->QueryStatus(&hrGatherStatus, NULL)); 
 
         if (hrGatherStatus == VSS_S_ASYNC_CANCELLED)
@@ -169,16 +188,20 @@ int _tmain(int argc, _TCHAR* argv[])
             throw new CHoboCopyException(L"GatherWriterMetadata was cancelled."); 
         }
 
-        InstrumentationHelper::Log(TEXT("Calling GetWriterMetadataCount")); 
+        OutputWriter::WriteLine(TEXT("Calling GetWriterMetadataCount")); 
+
+        vector<CWriter> writers;
+
         UINT cWriters; 
         CHECK_HRESULT(pBackupComponents->GetWriterMetadataCount(&cWriters)); 
 
-        for (UINT i = 0; i < cWriters; ++i)
+        for (UINT iWriter = 0; iWriter < cWriters; ++iWriter)
         {
+            CWriter writer; 
             CComPtr<IVssExamineWriterMetadata> pExamineWriterMetadata; 
             GUID id; 
-            InstrumentationHelper::Log(TEXT("Calling GetWriterMetadata")); 
-            CHECK_HRESULT(pBackupComponents->GetWriterMetadata(i, &id, &pExamineWriterMetadata)); 
+            OutputWriter::WriteLine(TEXT("Calling GetWriterMetadata")); 
+            CHECK_HRESULT(pBackupComponents->GetWriterMetadata(iWriter, &id, &pExamineWriterMetadata)); 
             GUID idInstance; 
             GUID idWriter; 
             BSTR bstrWriterName;
@@ -186,16 +209,127 @@ int _tmain(int argc, _TCHAR* argv[])
             VSS_SOURCE_TYPE source; 
             CHECK_HRESULT(pExamineWriterMetadata->GetIdentity(&idInstance, &idWriter, &bstrWriterName, &usage, &source)); 
 
+            writer.set_InstanceId(idInstance); 
+            writer.set_Name(bstrWriterName); 
+            writer.set_WriterId(idWriter); 
+
             CComBSTR writerName(bstrWriterName); 
             CString message; 
-            message.AppendFormat(TEXT("Writer %d named %s"), i, (LPCTSTR) writerName); 
-            InstrumentationHelper::Log(message); 
+            message.AppendFormat(TEXT("Writer %d named %s"), iWriter, (LPCTSTR) writerName); 
+            OutputWriter::WriteLine(message); 
+
+            UINT cIncludeFiles;
+            UINT cExcludeFiles; 
+            UINT cComponents; 
+            CHECK_HRESULT(pExamineWriterMetadata->GetFileCounts(&cIncludeFiles, &cExcludeFiles, &cComponents)); 
+
+            message.Empty(); 
+            message.AppendFormat(TEXT("Writer has %d components"), cComponents); 
+            OutputWriter::WriteLine(message); 
+
+            for (UINT iComponent = 0; iComponent < cComponents; ++iComponent)
+            {
+                CWriterComponent component; 
+
+                CComPtr<IVssWMComponent> pComponent; 
+                CHECK_HRESULT(pExamineWriterMetadata->GetComponent(iComponent, &pComponent)); 
+
+                PVSSCOMPONENTINFO pComponentInfo; 
+                CHECK_HRESULT(pComponent->GetComponentInfo(&pComponentInfo)); 
+
+                CString message; 
+                message.AppendFormat(TEXT("Component %d is named %s, has a path of %s, and is %sselectable for backup. %d files, %d databases, %d log files."), 
+                    iComponent,
+                    pComponentInfo->bstrComponentName, 
+                    pComponentInfo->bstrLogicalPath, 
+                    pComponentInfo->bSelectable ? TEXT("") : TEXT("not "), 
+                    pComponentInfo->cFileCount, 
+                    pComponentInfo->cDatabases,
+                    pComponentInfo->cLogFiles); 
+                OutputWriter::WriteLine(message); 
+
+                component.set_LogicalPath(pComponentInfo->bstrLogicalPath); 
+                component.set_SelectableForBackup(pComponentInfo->bSelectable); 
+                component.set_Writer(iWriter); 
+                component.set_Name(pComponentInfo->bstrComponentName);
+                component.set_Type(pComponentInfo->type);
+
+                for (UINT iFile = 0; iFile < pComponentInfo->cFileCount; ++iFile)
+                {
+                    CComPtr<IVssWMFiledesc> pFileDesc; 
+                    CHECK_HRESULT(pComponent->GetFile(iFile, &pFileDesc)); 
+
+                    CComBSTR bstrPath; 
+                    CHECK_HRESULT(pFileDesc->GetPath(&bstrPath)); 
+
+                    CComBSTR bstrFileSpec; 
+                    CHECK_HRESULT(pFileDesc->GetFilespec(&bstrFileSpec)); 
+
+                    CString message; 
+                    message.AppendFormat(TEXT("File %d has path %s\\%s"), iFile, bstrPath, bstrFileSpec); 
+                    OutputWriter::WriteLine(message); 
+                }
+
+                for (UINT iDatabase = 0; iDatabase < pComponentInfo->cDatabases; ++iDatabase)
+                {
+                    CComPtr<IVssWMFiledesc> pFileDesc; 
+                    CHECK_HRESULT(pComponent->GetDatabaseFile(iDatabase, &pFileDesc)); 
+
+                    CComBSTR bstrPath; 
+                    CHECK_HRESULT(pFileDesc->GetPath(&bstrPath)); 
+
+                    CComBSTR bstrFileSpec; 
+                    CHECK_HRESULT(pFileDesc->GetFilespec(&bstrFileSpec)); 
+
+                    CString message; 
+                    message.AppendFormat(TEXT("Database file %d has path %s\\%s"), iDatabase, bstrPath, bstrFileSpec); 
+                    OutputWriter::WriteLine(message); 
+                }
+
+                for (UINT iDatabaseLogFile = 0; iDatabaseLogFile < pComponentInfo->cLogFiles; ++iDatabaseLogFile)
+                {
+                    CComPtr<IVssWMFiledesc> pFileDesc; 
+                    CHECK_HRESULT(pComponent->GetDatabaseLogFile(iDatabaseLogFile, &pFileDesc)); 
+
+                    CComBSTR bstrPath; 
+                    CHECK_HRESULT(pFileDesc->GetPath(&bstrPath)); 
+
+                    CComBSTR bstrFileSpec; 
+                    CHECK_HRESULT(pFileDesc->GetFilespec(&bstrFileSpec)); 
+
+                    CString message; 
+                    message.AppendFormat(TEXT("Database log file %d has path %s\\%s"), iDatabaseLogFile, bstrPath, bstrFileSpec); 
+                    OutputWriter::WriteLine(message); 
+                }
+
+                CHECK_HRESULT(pComponent->FreeComponentInfo(pComponentInfo)); 
+
+                writer.get_Components().push_back(component); 
+
+            }
+
+            writer.ComputeComponentTree(); 
+
+            for (unsigned int iComponent = 0; iComponent < writer.get_Components().size(); ++iComponent)
+            {
+                CWriterComponent& component = writer.get_Components()[iComponent]; 
+                CString message; 
+                message.AppendFormat(TEXT("Component %d has name %s, path %s, is %sselectable for backup, and has parent %s"), 
+                    iComponent, 
+                    component.get_Name(), 
+                    component.get_LogicalPath(), 
+                    component.get_SelectableForBackup() ? TEXT("") : TEXT("not "), 
+                    component.get_Parent() == NULL ? TEXT("(no parent)") : component.get_Parent()->get_Name()); 
+                OutputWriter::WriteLine(message); 
+            }
+
+            writers.push_back(writer); 
         }
 
-        InstrumentationHelper::Log(TEXT("Calling StartSnapshotSet")); 
+        OutputWriter::WriteLine(TEXT("Calling StartSnapshotSet")); 
         CHECK_HRESULT(pBackupComponents->StartSnapshotSet(&snapshotSetId));
 
-        InstrumentationHelper::Log(TEXT("Calling GetVolumePathName")); 
+        OutputWriter::WriteLine(TEXT("Calling GetVolumePathName")); 
         WCHAR wszVolumePathName[MAX_PATH]; 
         BOOL bWorked = ::GetVolumePathName(options.get_Source(), wszVolumePathName, MAX_PATH); 
 
@@ -210,14 +344,51 @@ int _tmain(int argc, _TCHAR* argv[])
             throw new CHoboCopyException(message.GetString()); 
         }
 
-        InstrumentationHelper::Log(TEXT("Calling AddToSnapshotSet")); 
+        OutputWriter::WriteLine(TEXT("Calling AddToSnapshotSet")); 
         GUID snapshotId; 
         CHECK_HRESULT(pBackupComponents->AddToSnapshotSet(wszVolumePathName, GUID_NULL, &snapshotId)); 
 
-        InstrumentationHelper::Log(TEXT("Calling SetBackupState")); 
-        CHECK_HRESULT(pBackupComponents->SetBackupState(FALSE, FALSE, options.get_BackupType(), FALSE)); 
+        for (unsigned int iWriter = 0; iWriter < writers.size(); ++iWriter)
+        {
+            CWriter writer = writers[iWriter];
 
-        InstrumentationHelper::Log(TEXT("Calling PrepareForBackup")); 
+            CString message; 
+            message.AppendFormat(TEXT("Adding components to snapshot set for writer %s"), writer.get_Name()); 
+            OutputWriter::WriteLine(message); 
+            for (unsigned int iComponent = 0; iComponent < writer.get_Components().size(); ++iComponent)
+            {
+                CWriterComponent component = writer.get_Components()[iComponent];
+
+                if (ShouldAddComponent(component))
+                {
+                    CString message; 
+                    message.AppendFormat(TEXT("Adding component %s (%s) from writer %s"), 
+                        component.get_Name(), 
+                        component.get_LogicalPath(), 
+                        writer.get_Name()); 
+                    OutputWriter::WriteLine(message); 
+                    CHECK_HRESULT(pBackupComponents->AddComponent(
+                        writer.get_InstanceId(), 
+                        writer.get_WriterId(),
+                        component.get_Type(), 
+                        component.get_LogicalPath(), 
+                        component.get_Name()
+                        ));
+                }
+                else
+                {
+                    CString message; 
+                    message.AppendFormat(TEXT("Not adding component %s from writer %s."), 
+                        component.get_Name(), writer.get_Name()); 
+                    OutputWriter::WriteLine(message); 
+                }
+            }
+        }
+
+        OutputWriter::WriteLine(TEXT("Calling SetBackupState")); 
+        CHECK_HRESULT(pBackupComponents->SetBackupState(TRUE, FALSE, options.get_BackupType(), FALSE)); 
+
+        OutputWriter::WriteLine(TEXT("Calling PrepareForBackup")); 
         CComPtr<IVssAsync> pPrepareForBackupResults; 
         CHECK_HRESULT(pBackupComponents->PrepareForBackup(&pPrepareForBackupResults)); 
 
@@ -238,107 +409,124 @@ int _tmain(int argc, _TCHAR* argv[])
 
         if (!bWorked)
         {
-            InstrumentationHelper::Log(TEXT("Unable to set control handler. Ctrl-C and Ctrl-Break may have undesirable results."), LOG_LEVEL_WARN);
+            OutputWriter::WriteLine(TEXT("Unable to set control handler. Ctrl-C and Ctrl-Break may have undesirable results."), 
+                VERBOSITY_THRESHOLD_NORMAL);
         }
 
-        InstrumentationHelper::Log(TEXT("Calling DoSnapshotSet")); 
-        CComPtr<IVssAsync> pDoSnapshotSetResults;
-        CHECK_HRESULT(pBackupComponents->DoSnapshotSet(&pDoSnapshotSetResults)); 
-
-        CHECK_HRESULT(pDoSnapshotSetResults->Wait());
-
-        bSnapshotCreated = true; 
-
-        if (s_cancel)
+        if (!options.get_Simulate())
         {
-            throw new CHoboCopyException(TEXT("Processing was cancelled by control-c, control-break, or a shutdown event. Terminating.")); 
-        }
+            OutputWriter::WriteLine(TEXT("Calling DoSnapshotSet")); 
+            CComPtr<IVssAsync> pDoSnapshotSetResults;
+            CHECK_HRESULT(pBackupComponents->DoSnapshotSet(&pDoSnapshotSetResults)); 
 
-        bWorked = ::SetConsoleCtrlHandler(CtrlHandler, FALSE); 
+            CHECK_HRESULT(pDoSnapshotSetResults->Wait());
 
-        if (!bWorked)
-        {
-            InstrumentationHelper::Log(TEXT("Unable to reset control handler. Ctrl-C and Ctrl-Break may have undesirable results."), LOG_LEVEL_WARN);
-        }
+            bSnapshotCreated = true; 
 
-        HRESULT hrDoSnapshotSetResults; 
-        CHECK_HRESULT(pDoSnapshotSetResults->QueryStatus(&hrDoSnapshotSetResults, NULL)); 
+            if (s_cancel)
+            {
+                throw new CHoboCopyException(TEXT("Processing was cancelled by control-c, control-break, or a shutdown event. Terminating.")); 
+            }
 
-        if (hrDoSnapshotSetResults != VSS_S_ASYNC_FINISHED)
-        {
-            throw new CHoboCopyException(L"DoSnapshotSet failed."); 
-        }
+            bWorked = ::SetConsoleCtrlHandler(CtrlHandler, FALSE); 
 
-        InstrumentationHelper::Log(TEXT("Calling GetSnapshotProperties")); 
-        VSS_SNAPSHOT_PROP snapshotProperties; 
-        CHECK_HRESULT(pBackupComponents->GetSnapshotProperties(snapshotId, &snapshotProperties));
+            if (!bWorked)
+            {
+                OutputWriter::WriteLine(TEXT("Unable to reset control handler. Ctrl-C and Ctrl-Break may have undesirable results."), VERBOSITY_THRESHOLD_NORMAL);
+            }
 
-        InstrumentationHelper::Log(TEXT("Calling CalculateSourcePath")); 
-        // TODO: We'll eventually have to deal with mount points
-        CString wszSource;
-        CalculateSourcePath(
-            snapshotProperties.m_pwszSnapshotDeviceObject, 
-            options.get_Source(),
-            wszVolumePathName, 
-            wszSource
-            );
+            HRESULT hrDoSnapshotSetResults; 
+            CHECK_HRESULT(pDoSnapshotSetResults->QueryStatus(&hrDoSnapshotSetResults, NULL)); 
 
-        InstrumentationHelper::Log(TEXT("Calling CopyRecursive")); 
+            if (hrDoSnapshotSetResults != VSS_S_ASYNC_FINISHED)
+            {
+                throw new CHoboCopyException(L"DoSnapshotSet failed."); 
+            }
 
-        CCopyFilter* pFilter; 
-        if (options.get_BackupType() == VSS_BT_FULL)
-        {
-            pFilter = new CIncludeAllCopyFilter(); 
-        }
-        else if (options.get_BackupType() == VSS_BT_INCREMENTAL)
-        {
-            pFilter = new CModifiedSinceCopyFilter(lastBackupTime); 
-        }
+            OutputWriter::WriteLine(TEXT("Calling GetSnapshotProperties")); 
+            VSS_SNAPSHOT_PROP snapshotProperties; 
+            CHECK_HRESULT(pBackupComponents->GetSnapshotProperties(snapshotId, &snapshotProperties));
 
-        CCopyRecursive copyAction(wszSource, options.get_Destination(), options.get_SkipDenied(), *pFilter); 
-        RecurseDirectory(wszSource, copyAction, TEXT("")); 
+            OutputWriter::WriteLine(TEXT("Calling CalculateSourcePath")); 
+            // TODO: We'll eventually have to deal with mount points
+            CString wszSource;
+            CalculateSourcePath(
+                snapshotProperties.m_pwszSnapshotDeviceObject, 
+                options.get_Source(),
+                wszVolumePathName, 
+                wszSource
+                );
 
-        delete pFilter; 
+            message.Empty(); 
+            message.AppendFormat(TEXT("Recursively creating destination directory %s."), 
+                options.get_Destination()); 
+            OutputWriter::WriteLine(message); 
 
-        fileCount = copyAction.get_FileCount(); 
-        directoryCount = copyAction.get_DirectoryCount();
-        skipCount = copyAction.get_SkipCount(); 
-        byteCount = copyAction.get_ByteCount(); 
+            Utilities::CreateDirectory(options.get_Destination()); 
 
-        InstrumentationHelper::Log(TEXT("Calling BackupComplete")); 
-        CComPtr<IVssAsync> pBackupCompleteResults; 
-        CHECK_HRESULT(pBackupComponents->BackupComplete(&pBackupCompleteResults)); 
+            OutputWriter::WriteLine(TEXT("Calling CopyRecursive")); 
 
-        HRESULT hrBackupCompleteResults; 
-        CHECK_HRESULT(pBackupCompleteResults->QueryStatus(&hrBackupCompleteResults, NULL)); 
-
-        if (hrPrepareForBackupResults != VSS_S_ASYNC_FINISHED)
-        {
-            throw new CHoboCopyException(TEXT("Completion of backup failed.")); 
-        }
-
-        bAbnormalAbort = false; 
-
-        if (options.get_StateFile() != NULL)
-        {
-            InstrumentationHelper::Log(TEXT("Calling SaveAsXML"));
-            CComBSTR bstrBackupDocument; 
-            CHECK_HRESULT(pBackupComponents->SaveAsXML(&bstrBackupDocument)); 
+            vector<CCopyFilter*> filters; 
 
             if (options.get_BackupType() == VSS_BT_FULL)
             {
-                backupState.set_LastFullBackupTime(&snapshotTime); 
+                filters.push_back(new CIncludeAllCopyFilter()); 
             }
             else if (options.get_BackupType() == VSS_BT_INCREMENTAL)
             {
-                backupState.set_LastIncrementalBackupTime(&snapshotTime); 
-            }
-            else
-            {
-                throw new CHoboCopyException(TEXT("Unsupported backup type.")); 
+                filters.push_back(new CModifiedSinceCopyFilter(lastBackupTime, options.get_SkipDenied()));
             }
 
-            backupState.Save(options.get_StateFile(), bstrBackupDocument); 
+            filters.push_back(new CFilespecCopyFilter(options.get_Filespecs())); 
+
+            CCopyAction copyAction(wszSource, options.get_Destination(), options.get_SkipDenied(), filters); 
+            ProcessDirectory(wszSource, copyAction, TEXT(""), options.get_Recursive()); 
+
+            for (unsigned int iFilter = 0; iFilter < filters.size(); ++iFilter)
+            {
+                delete filters[iFilter]; 
+            }
+
+            fileCount = copyAction.get_FileCount(); 
+            directoryCount = copyAction.get_DirectoryCount();
+            skipCount = copyAction.get_SkipCount(); 
+            byteCount = copyAction.get_ByteCount(); 
+
+            OutputWriter::WriteLine(TEXT("Calling BackupComplete")); 
+            CComPtr<IVssAsync> pBackupCompleteResults; 
+            CHECK_HRESULT(pBackupComponents->BackupComplete(&pBackupCompleteResults)); 
+
+            HRESULT hrBackupCompleteResults; 
+            CHECK_HRESULT(pBackupCompleteResults->QueryStatus(&hrBackupCompleteResults, NULL)); 
+
+            if (hrPrepareForBackupResults != VSS_S_ASYNC_FINISHED)
+            {
+                throw new CHoboCopyException(TEXT("Completion of backup failed.")); 
+            }
+
+            bAbnormalAbort = false; 
+
+            if (options.get_StateFile() != NULL)
+            {
+                OutputWriter::WriteLine(TEXT("Calling SaveAsXML"));
+                CComBSTR bstrBackupDocument; 
+                CHECK_HRESULT(pBackupComponents->SaveAsXML(&bstrBackupDocument)); 
+
+                if (options.get_BackupType() == VSS_BT_FULL)
+                {
+                    backupState.set_LastFullBackupTime(&snapshotTime); 
+                }
+                else if (options.get_BackupType() == VSS_BT_INCREMENTAL)
+                {
+                    backupState.set_LastIncrementalBackupTime(&snapshotTime); 
+                }
+                else
+                {
+                    throw new CHoboCopyException(TEXT("Unsupported backup type.")); 
+                }
+
+                backupState.Save(options.get_StateFile(), bstrBackupDocument); 
+            }
         }
     }
     catch (CComException* e)
@@ -349,13 +537,13 @@ int _tmain(int argc, _TCHAR* argv[])
         e->get_File(file); 
         message.Format(TEXT("There was a COM failure 0x%x - %s (%d)"), 
             e->get_Hresult(), file, e->get_Line()); 
-        InstrumentationHelper::Log(message, LOG_LEVEL_ERROR); 
+        OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_UNLESS_SILENT); 
         return 1; 
     }
     catch (CHoboCopyException* e)
     {
         Cleanup(bAbnormalAbort, bSnapshotCreated, pBackupComponents, snapshotSetId);
-        InstrumentationHelper::Log(e->get_Message(), LOG_LEVEL_ERROR); 
+        OutputWriter::WriteLine(e->get_Message(), VERBOSITY_THRESHOLD_UNLESS_SILENT); 
         return 1; 
     }
     catch (CParseOptionsException* e)
@@ -363,14 +551,14 @@ int _tmain(int argc, _TCHAR* argv[])
         Cleanup(bAbnormalAbort, bSnapshotCreated, pBackupComponents, snapshotSetId);
         CString message; 
         message.AppendFormat(TEXT("Error: %s\n"), e->get_Message()); 
-        InstrumentationHelper::Log(message, LOG_LEVEL_ERROR);
-        InstrumentationHelper::Log(COptions::get_Usage(), LOG_LEVEL_ERROR); 
+        OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_UNLESS_SILENT);
+        OutputWriter::WriteLine(COptions::get_Usage(), VERBOSITY_THRESHOLD_UNLESS_SILENT); 
         return 2; 
     }
 
     Cleanup(false, bSnapshotCreated, pBackupComponents, snapshotSetId);
-    Console::WriteLine(TEXT("Backup successfully completed.")); 
-    
+    OutputWriter::WriteLine(TEXT("Backup successfully completed."), VERBOSITY_THRESHOLD_UNLESS_SILENT); 
+
     CString message; 
     CString startTimeStringLocal; 
     Utilities::FormatDateTime(&startTime, TEXT(" "), true, startTimeStringLocal); 
@@ -380,10 +568,10 @@ int _tmain(int argc, _TCHAR* argv[])
     Utilities::FormatDateTime(&finishTime, TEXT(" "), true, finishTimeString); 
     message.AppendFormat(TEXT("Backup started at %s, completed at %s."), 
         startTimeStringLocal, finishTimeString); 
-    InstrumentationHelper::Log(message, LOG_LEVEL_INFO); 
+    OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
     message.Empty(); 
 
-    float unitCount = byteCount; 
+    float unitCount = (float) byteCount; 
     LPCTSTR units = TEXT("bytes"); 
 
     if (unitCount > 1024)
@@ -406,7 +594,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
     message.AppendFormat(TEXT("%d files (%.2f %s, %d directories) copied, %d files skipped"), 
         fileCount, unitCount, units, directoryCount, skipCount); 
-    InstrumentationHelper::Log(message, LOG_LEVEL_INFO); 
+    OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
 
     return 0;
 }
@@ -456,19 +644,19 @@ BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
     switch (dwCtrlType)
     {
     case CTRL_C_EVENT:
-        InstrumentationHelper::Log(TEXT("Ctrl-C event received. Shutting down."), LOG_LEVEL_WARN); 
+        OutputWriter::WriteLine(TEXT("Ctrl-C event received. Shutting down."), VERBOSITY_THRESHOLD_NORMAL); 
         break;
     case CTRL_BREAK_EVENT:
-        InstrumentationHelper::Log(TEXT("Ctrl-Break event received. Shutting down."), LOG_LEVEL_WARN); 
+        OutputWriter::WriteLine(TEXT("Ctrl-Break event received. Shutting down."), VERBOSITY_THRESHOLD_NORMAL); 
         break;
     case CTRL_CLOSE_EVENT:
-        InstrumentationHelper::Log(TEXT("Application is being closed. Shutting down."), LOG_LEVEL_WARN); 
+        OutputWriter::WriteLine(TEXT("Application is being closed. Shutting down."), VERBOSITY_THRESHOLD_NORMAL); 
         break;
     case CTRL_LOGOFF_EVENT:
-        InstrumentationHelper::Log(TEXT("User is logging off. Shutting down."), LOG_LEVEL_WARN); 
+        OutputWriter::WriteLine(TEXT("User is logging off. Shutting down."), VERBOSITY_THRESHOLD_NORMAL); 
         break;
     case CTRL_SHUTDOWN_EVENT:
-        InstrumentationHelper::Log(TEXT("System is shutting down. Terminating copy."), LOG_LEVEL_WARN); 
+        OutputWriter::WriteLine(TEXT("System is shutting down. Terminating copy."), VERBOSITY_THRESHOLD_NORMAL); 
         break;
     }
 
@@ -484,14 +672,14 @@ void DeleteRecursive(LPCTSTR target)
         CString message; 
         message.Format(TEXT("Cannot delete directory %s because it does not exist. Proceeding anyway."), 
             target); 
-        InstrumentationHelper::Log(message, LOG_LEVEL_WARN); 
+        OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
         return; 
     }
 
-    CDeleteRecursive deleteAction(target); 
-    RecurseDirectory(target, deleteAction, TEXT("")); 
+    CDeleteAction deleteAction(target); 
+    ProcessDirectory(target, deleteAction, TEXT(""), true); 
 }
-void RecurseDirectory(LPCTSTR srcbase, CRecursiveAction& action, LPCTSTR directory)
+void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive)
 {
     WIN32_FIND_DATA findData;
     HANDLE hFindHandle;
@@ -500,7 +688,7 @@ void RecurseDirectory(LPCTSTR srcbase, CRecursiveAction& action, LPCTSTR directo
     Utilities::CombinePath(srcbase, directory, srcdir);
 
     action.VisitDirectoryInitial(directory); 
-    
+
     CString pattern;
     Utilities::CombinePath(srcdir, TEXT("*"), pattern);
 
@@ -511,15 +699,18 @@ void RecurseDirectory(LPCTSTR srcbase, CRecursiveAction& action, LPCTSTR directo
         {
             if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
             {
-                if (Utilities::AreEqual(findData.cFileName, L".") || Utilities::AreEqual(findData.cFileName, L".."))
+                if (recursive)
                 {
-                    // Do nothing
-                }
-                else
-                {
-                    CString subdirectory;
-                    Utilities::CombinePath(directory, findData.cFileName, subdirectory);
-                    RecurseDirectory(srcbase, action, subdirectory);
+                    if (Utilities::AreEqual(findData.cFileName, L".") || Utilities::AreEqual(findData.cFileName, L".."))
+                    {
+                        // Do nothing
+                    }
+                    else
+                    {
+                        CString subdirectory;
+                        Utilities::CombinePath(directory, findData.cFileName, subdirectory);
+                        ProcessDirectory(srcbase, action, subdirectory, recursive);
+                    }
                 }
             }
             else
@@ -540,3 +731,19 @@ void RecurseDirectory(LPCTSTR srcbase, CRecursiveAction& action, LPCTSTR directo
 
 }
 
+
+bool ShouldAddComponent(CWriterComponent& component)
+{
+    // Component should not be added if
+    // 1) It is not selectable for backup and 
+    // 2) It has a selectable ancestor
+    // Otherwise, add it. 
+
+    if (component.get_SelectableForBackup())
+    {
+        return true; 
+    }
+
+    return !component.get_HasSelectableAncestor();
+
+}

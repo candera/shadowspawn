@@ -23,14 +23,19 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
+#include "Utilities.h"
+#include "CCopyFilter.h"
+
 class CModifiedSinceCopyFilter : public CCopyFilter
 {
 private: 
     FILETIME _since; 
+	bool _skipDenied; 
 
 public: 
-    CModifiedSinceCopyFilter(LPSYSTEMTIME since)
+    CModifiedSinceCopyFilter(LPSYSTEMTIME since, bool skipDenied)
     {
+		_skipDenied = skipDenied; 
         BOOL worked = ::SystemTimeToFileTime(since, &_since);  
 
         if (!worked)
@@ -64,6 +69,11 @@ public:
         {
             DWORD error = ::GetLastError();
 
+			if (error == 5 && _skipDenied)
+			{
+				return false; 
+			}
+
             CString errorMessage; 
             Utilities::FormatErrorMessage(error, errorMessage); 
             CString message; 
@@ -77,6 +87,12 @@ public:
         if (!worked)
         {
             DWORD error = ::GetLastError(); 
+
+			if (error == 5 && _skipDenied)
+			{
+				::CloseHandle(hFile); 
+				return false; 
+			}
 
             CString errorMessage; 
             Utilities::FormatErrorMessage(error, errorMessage); 

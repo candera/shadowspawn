@@ -23,6 +23,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
+using namespace std; 
+
+#include "CHoboCopyException.h"
+
 class Utilities
 {
 public: 
@@ -74,6 +78,35 @@ public:
 #endif
     }
 
+    static void CreateDirectory(LPCTSTR directory)
+    {
+        vector<CString> pathComponents; 
+        CString path(directory); 
+        GetPathComponents(path, pathComponents); 
+
+        CString pathToCreate; 
+
+        for (unsigned int iComponent = 0; iComponent < pathComponents.size(); ++iComponent)
+        {
+            pathToCreate.Append(pathComponents[iComponent]); 
+            pathToCreate.AppendChar(TEXT('\\')); 
+
+            if (!DirectoryExists(pathToCreate))
+            {
+                BOOL bWorked = ::CreateDirectory(pathToCreate, NULL);
+
+                if (!bWorked)
+                {
+                    DWORD error = ::GetLastError(); 
+                    CString errorMessage; 
+                    FormatErrorMessage(error, errorMessage); 
+                    CString message;
+                    message.AppendFormat(TEXT("Failure creating directory %s - %s"), pathToCreate, errorMessage); 
+                    throw new CHoboCopyException(message); 
+                }
+            }
+        }
+    }
     static bool DirectoryExists(LPCTSTR directory)
     {
         WIN32_FILE_ATTRIBUTE_DATA attributes; 
@@ -83,7 +116,7 @@ public:
         {
             DWORD error = ::GetLastError();
 
-            if (error == 2)
+            if (error == 2 || error == 3)
             {
                 return false; 
             }
@@ -271,6 +304,20 @@ public:
     {
         delete x; 
     }
+
+    static void GetFileName(CString& path, CString& filename)
+    {
+        filename.Empty(); 
+
+        vector<CString> pathComponents; 
+        GetPathComponents(path, pathComponents); 
+
+        if (pathComponents.size() > 0)
+        {
+            filename = pathComponents[pathComponents.size() - 1]; 
+        }  
+    }
+
     static LONGLONG GetFileSize(LPCTSTR path)
     {
         HANDLE hFile = ::CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL); 
@@ -307,6 +354,98 @@ public:
         ::CloseHandle(hFile); 
 
         return size.QuadPart; 
+    }
+
+    static void GetPathComponents(CString& path, vector<CString>& pathComponents)
+    {
+        pathComponents.clear(); 
+
+        bool done = false; 
+        int start = 0;
+        while (!done)
+        {
+            CString component = path.Tokenize(TEXT("\\"), start); 
+
+            if (start == -1)
+            {
+                done = true; 
+            }
+            else
+            {
+                pathComponents.push_back(component); 
+            }
+        }
+
+    }
+
+    static bool IsMatch(CString& input, CString& pattern)
+    {
+        int nStars = 0; 
+        for (int iChar = 0; iChar < pattern.GetLength(); ++iChar)
+        {
+            if (pattern[iChar] == TEXT('*'))
+            {
+                ++nStars;
+            }
+        }
+
+        if (nStars > 1)
+        {
+            CString message; 
+            message.AppendFormat(TEXT("The pattern %s is illegal: only a single wildcard is supported."), pattern); 
+            throw new CHoboCopyException(message); 
+        }
+
+        // No wildcard is present
+        if (nStars == 0)
+        {
+            return input.CompareNoCase(pattern) == 0; 
+        }
+
+        // Short-circuit common cases
+        if (pattern.Compare(TEXT("*")) == 0)
+        {
+            return true; 
+        }
+
+        if (pattern.Compare(TEXT("*.*")) == 0)
+        {
+            return true; 
+
+        }
+
+        // A wildcard is present
+        int index = pattern.Find(TEXT("*")); 
+
+        if (index > 0)
+        {
+            if (index > input.GetLength())
+            {
+                return false; 
+            }
+
+            CString prefix = pattern.Left(index); 
+            CString inputStart = input.Left(index); 
+
+            if (prefix.CompareNoCase(inputStart) != 0)
+            {
+                return false; 
+            }
+        }
+
+        if (index < input.GetLength() - 1)
+        {
+            CString suffix = pattern.Mid(index + 1); 
+            CString inputEnd = input.Right(suffix.GetLength()); 
+
+            if (suffix.CompareNoCase(inputEnd) != 0)
+            {
+                return false; 
+            }
+        }
+
+        return true; 
+
     }
     //static void FreeString(LPCTSTR s)
     //{

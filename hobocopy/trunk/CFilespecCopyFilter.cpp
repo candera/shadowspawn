@@ -21,7 +21,8 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <stdafx.h>
-
-#include "CRecursiveAction.h"
-#include "CDeleteRecursive.h"
+#include "stdafx.h"
+#include "Utilities.h"
+#include "CHobocopyException.h"
+#include "CCopyFilter.h"
+#include "CFilespecCopyFilter.h"

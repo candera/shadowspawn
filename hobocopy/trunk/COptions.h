@@ -24,6 +24,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "CHoboCopyException.h"
 #include "CParseOptionsException.h"
 #include "Utilities.h"
+#include "OutputWriter.h"
 
 using namespace std; 
 
@@ -35,11 +36,13 @@ private:
     bool _clearDestination;
     bool _debug; 
     CString _destination; 
-    int _logLevel;  
+    vector<CString> _filespecs; 
+    bool _recursive; 
+    bool _simulate; 
     bool _skipDenied; 
     CString _source; 
     CString _stateFile; 
-
+    int _verbosityLevel;  
 
 public: 
     bool get_AcceptAll()
@@ -54,17 +57,25 @@ public:
     {
         return _clearDestination; 
     }
-    LPCTSTR get_Destination(void)
-    {
-        return _destination.GetString(); 
-    }
     bool get_Debug(void)
     {
         return _debug; 
     }
-    int get_LogLevel(void)
+    LPCTSTR get_Destination(void)
     {
-        return _logLevel; 
+        return _destination.GetString(); 
+    }
+    vector<CString>& get_Filespecs(void)
+    {
+        return _filespecs; 
+    }
+    bool get_Recursive(void)
+    {
+        return _recursive; 
+    }
+    bool get_Simulate(void)
+    {
+        return _simulate; 
     }
     bool get_SkipDenied(void)
     {
@@ -82,8 +93,9 @@ public:
     static LPCTSTR get_Usage(void)
     {
         return TEXT("Usage:\n\n")
-TEXT("hobocopy [/statefile=FILE] [/loglevel=LEVEL] [ /full | /incremental ]\n")
-TEXT("         [ /clear ] [ /skipdenied ] [ /y ] <src> <dest>\n")
+TEXT("hobocopy [/statefile=FILE] [/verbosity=LEVEL] [ /full | /incremental ]\n")
+TEXT("         [ /clear ] [ /skipdenied ] [ /y ] [ /simulate ] [/recursive] \n")
+TEXT("         <src> <dest> [<file> [<file> [ ... ] ]\n")
 TEXT("\n")
 TEXT("Recursively copies a directory tree from <src> to <dest>.\n")
 TEXT("\n")
@@ -93,7 +105,7 @@ TEXT("               is specified, as the date and time of the last copy is\n")
 TEXT("               read from this file to determine which files should be\n")
 TEXT("               copied.\n")
 TEXT("\n")
-TEXT("/loglevel    - Specifies how much information HoboCopy will emit\n")
+TEXT("/verbosity   - Specifies how much information HoboCopy will emit\n")
 TEXT("               during copy. Legal values are: 0 - almost no\n")
 TEXT("               information will be emitted. 1 - Only error information\n")
 TEXT("               will be emitted. 2 - Errors and warnings will be\n")
@@ -126,11 +138,23 @@ TEXT("               combination with the /clear switch, this switch will\n")
 TEXT("               cause the destination directory to be deleted without\n")
 TEXT("               confirmation.\n")
 TEXT("\n")
+TEXT("/simulate    - Simulates copy only - no snapshot is taken and no copy\n")
+TEXT("               is performed.\n")
+TEXT("\n")
+TEXT("/recursive   - Copies subdirectories (including empty ones). Shortcut: /r\n")
+TEXT("\n")
 TEXT("<src>        - The directory to copy (the source directory).\n")
 TEXT("<dest>       - The directory to copy to (the destination directory).\n")
+TEXT("<file>       - A file (e.g. foo.txt) or filespec (e.g. *.txt) to copy.\n")
+TEXT("               Defaults to *.*.\n"); 
+
 //TEXT("\n")
 //TEXT("\n")
 ; 
+    }
+    int get_VerbosityLevel(void)
+    {
+        return _verbosityLevel; 
     }
 
     static COptions Parse(int argc, _TCHAR* argv[])
@@ -139,10 +163,12 @@ TEXT("<dest>       - The directory to copy to (the destination directory).\n")
 
         options._backupType = VSS_BT_FULL;
         options._clearDestination = false; 
-        options._logLevel = LOG_LEVEL_WARN; 
+        options._verbosityLevel = VERBOSITY_LEVEL_NORMAL; 
         options._acceptAll = false; 
         options._skipDenied = false; 
         options._debug = false; 
+        options._simulate = false; 
+        options._recursive = false; 
 
         if (argc < 3)
         {
@@ -174,9 +200,9 @@ TEXT("<dest>       - The directory to copy to (the destination directory).\n")
                 {
                     options._stateFile = GetArgValue(arg); 
                 }
-                else if (Utilities::StartsWith(arg, TEXT("loglevel=")))
+                else if (Utilities::StartsWith(arg, TEXT("verbosity=")))
                 {
-                    options._logLevel = _ttoi(GetArgValue(arg)); 
+                    options._verbosityLevel = _ttoi(GetArgValue(arg)); 
                 }
                 else if (arg.Compare(TEXT("y")) == 0)
                 {
@@ -189,6 +215,14 @@ TEXT("<dest>       - The directory to copy to (the destination directory).\n")
                 else if (arg.Compare(TEXT("debug")) == 0)
                 {
                     options._debug = true; 
+                }
+                else if (arg.Compare(TEXT("simulate")) == 0)
+                {
+                    options._simulate = true; 
+                }
+                else if (arg.Compare(TEXT("recursive")) == 0 || arg.Compare(TEXT("r")) == 0)
+                {
+                    options._recursive = true; 
                 }
                 else
                 {
@@ -209,9 +243,7 @@ TEXT("<dest>       - The directory to copy to (the destination directory).\n")
                 }
                 else
                 {
-                    CString message("Unrecognized argument: "); 
-                    message.Append(argv[i]); 
-                    throw new CParseOptionsException(message.GetString()); 
+                    options._filespecs.push_back(argv[i]); 
                 }
             }
         }

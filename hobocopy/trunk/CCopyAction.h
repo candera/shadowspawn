@@ -23,20 +23,24 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
-class CCopyRecursive : public CRecursiveAction
+#include "CCopyFilter.h"
+#include "CDirectoryAction.h"
+#include "OutputWriter.h"
+
+class CCopyAction : public CDirectoryAction
 {
 private: 
     LONGLONG _byteCount; 
     LPCTSTR _destination; 
     int _directoryCount; 
     int _fileCount; 
-    CCopyFilter& _filter; 
+    vector<CCopyFilter*> _filters; 
     int _skipCount; 
     bool _skipDenied; 
     LPCTSTR _source; 
 
 public: 
-    CCopyRecursive::CCopyRecursive(LPCTSTR source, LPCTSTR destination, bool skipDenied, CCopyFilter& filter) : _filter(filter)
+    CCopyAction::CCopyAction(LPCTSTR source, LPCTSTR destination, bool skipDenied, vector<CCopyFilter*> filters) : _filters(filters)
     {
         _source = source; 
         _destination = destination; 
@@ -71,7 +75,7 @@ public:
     {
         CString message; 
         message.AppendFormat(TEXT("Copied directory %s"), path); 
-        InstrumentationHelper::Log(message, LOG_LEVEL_INFO); 
+        OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
         ++_directoryCount; 
     }
 
@@ -101,7 +105,7 @@ public:
         {
             CString message; 
             message.AppendFormat(TEXT("Created directory %s"), destDir); 
-            InstrumentationHelper::Log(message, LOG_LEVEL_DEBUG); 
+            OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_IF_VERBOSE); 
         }
 
     }
@@ -113,7 +117,7 @@ public:
         CString destinationFile; 
         Utilities::CombinePath(_destination, path, destinationFile);
         Utilities::FixLongFilenames(destinationFile); 
-        if (_filter.IsFileMatch(sourceFile))
+        if (IsFileMatch(sourceFile))
         {
             BOOL worked = ::CopyFile(sourceFile, destinationFile, false);
             if (!worked)
@@ -124,7 +128,7 @@ public:
                 {
                     CString message; 
                     message.Format(TEXT("Error accessing file %s. Skipping."), sourceFile); 
-                    InstrumentationHelper::Log(message, LOG_LEVEL_WARN); 
+                    OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
                     ++_skipCount; 
                 }
                 else
@@ -141,7 +145,7 @@ public:
             {
                 CString message; 
                 message.AppendFormat(TEXT("Copied file %s to %s"), sourceFile, destinationFile); 
-                InstrumentationHelper::Log(message, LOG_LEVEL_DEBUG); 
+                OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_IF_VERBOSE); 
                 ++_fileCount; 
 
                 _byteCount += Utilities::GetFileSize(sourceFile); 
@@ -151,9 +155,25 @@ public:
         {
             CString message;
             message.AppendFormat(TEXT("Skipping file %s because it doesn't meet filter criteria."), path); 
-            InstrumentationHelper::Log(message); 
+            OutputWriter::WriteLine(message); 
             ++_skipCount; 
         }
 
     }
+
+private:
+    bool IsFileMatch(CString& file)
+    {
+        for (unsigned int iFilter = 0; iFilter < _filters.size(); ++iFilter)
+        {
+            if (!_filters[iFilter]->IsFileMatch(file))
+            {
+                return false; 
+            }
+        }
+
+        return true; 
+
+    }
+
 };

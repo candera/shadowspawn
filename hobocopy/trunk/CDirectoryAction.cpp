@@ -21,12 +21,5 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
-
-class CRecursiveAction
-{
-public:
-    virtual void VisitDirectoryFinal(LPCTSTR path) = 0; 
-    virtual void VisitDirectoryInitial(LPCTSTR path) = 0; 
-    virtual void VisitFile(LPCTSTR path) = 0; 
-};
+#include <stdafx.h>
+#include "CDirectoryAction.h"

@@ -3,7 +3,7 @@ HOBOCOPY - A backup/copy tool.
 ! WHAT IS HOBOCOPY? 
 
 HoboCopy is a backup/copy tool. It is inspired by robocopy in both name and in
-functionality. It differs greatly from roobcopy, however, in two respects: 
+functionality. It differs greatly from robocopy, however, in two respects: 
 
 1) It is not as full-featured as robocopy. 
 2) It uses the Volume Shadow Service (VSS) to "snapshot" the disk before 
@@ -35,8 +35,9 @@ That said, the author of the tool uses it to back up his own systems.
 
 ! USAGE: 
 
-hobocopy [/statefile=FILE] [/loglevel=LEVEL] [ /full | /incremental ]
-         [ /clear ] [ /skipdenied ] [ /y ] <src> <dest>
+hobocopy [/statefile=FILE] [/verbosity=LEVEL] [ /full | /incremental ]
+         [ /clear ] [ /skipdenied ] [ /y ] [ /simulate ] [/recursive]
+         <src> <dest> [<file> [<file> [ ... ] ]
 
 Recursively copies a directory tree from <src> to <dest>.
 
@@ -46,7 +47,7 @@ Recursively copies a directory tree from <src> to <dest>.
                read from this file to determine which files should be
                copied.
 
-/loglevel    - Specifies how much information HoboCopy will emit
+/verbosity   - Specifies how much information HoboCopy will emit
                during copy. Legal values are: 0 - almost no
                information will be emitted. 1 - Only error information
                will be emitted. 2 - Errors and warnings will be
@@ -79,5 +80,12 @@ Recursively copies a directory tree from <src> to <dest>.
                cause the destination directory to be deleted without
                confirmation.
 
+/simulate    - Simulates copy only - no snapshot is taken and no copy
+               is performed.
+
+/recursive   - Copies subdirectories (including empty ones). Shortcut: /r
+
 <src>        - The directory to copy (the source directory).
 <dest>       - The directory to copy to (the destination directory).
+<file>       - A file (e.g. foo.txt) or filespec (e.g. *.txt) to copy.
+               Defaults to *.*.

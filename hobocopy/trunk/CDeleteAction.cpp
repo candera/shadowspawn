@@ -22,6 +22,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <stdafx.h>
-#include "InstrumentationHelper.h"
 
-LOG_LEVEL InstrumentationHelper::s_logLevel;
+#include "CDirectoryAction.h"
+#include "CDeleteAction.h"

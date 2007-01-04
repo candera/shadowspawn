@@ -23,6 +23,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
+#include "CCopyFilter.h"
+
 class CIncludeAllCopyFilter : public CCopyFilter
 {
 public: 

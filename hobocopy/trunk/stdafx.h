@@ -59,6 +59,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // TODO: reference additional headers your program requires here
 #include <iostream> 
+#include <vector>
+//#include <list>
 #include <vss.h>
 #include <vswriter.h>
 #include <vsbackup.h>
@@ -68,17 +70,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //#import <msxml3.dll> raw_interfaces_only
 #include <msxml2.h>
 
-#include "CComException.h" 
 #define CHECK_HRESULT(x) { HRESULT ckhr = ((x)); if (ckhr != S_OK) throw new CComException(ckhr, __FILE__, __LINE__); }
 
-#include "CHoboCopyException.h"
-#include "Utilities.h"
-#include "Console.h"
-#include "InstrumentationHelper.h"
-#include "CCopyFilter.h"
-#include "CRecursiveAction.h"
-#include "CCopyRecursive.h"
-#include "CDeleteRecursive.h"
-#include "CIncludeAllCopyFilter.h"
-#include "CModifiedSinceCopyFilter.h"
-#include "CBackupState.h"
+//#include "CHoboCopyException.h"
+//#include "Utilities.h"
+//#include "Console.h"
+//#include "OutputWriter.h"
+//#include "CCopyFilter.h"
+//#include "CDirectoryAction.h"
+//#include "CCopyAction.h"
+//#include "CDeleteAction.h"
+//#include "CIncludeAllCopyFilter.h"
+//#include "CModifiedSinceCopyFilter.h"
+//#include "CBackupState.h"

@@ -21,9 +21,5 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <stdafx.h>
-#include "CHoboCopyException.h"
-#include "Utilities.h"
-#include "Console.h"
-
-HANDLE Console::s_hStdOut = INVALID_HANDLE_VALUE;
+#include "stdafx.h"
+#include "CWriter.h"
