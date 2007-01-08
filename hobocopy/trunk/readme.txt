@@ -9,6 +9,13 @@ functionality. It differs greatly from robocopy, however, in two respects:
 2) It uses the Volume Shadow Service (VSS) to "snapshot" the disk before 
    copying. It then copies from the snapshot rather than the "live" disk. 
    
+! INSTALLING HOBOCOPY
+
+Most users can simply unzip the file containing hobocopy.exe into the directory 
+of your choice. However, HoboCopy uses the Visual C++ 8.0 runtime, which may
+not be present on some machines. If HoboCopy does not work for you, run the 
+vcredist executable available from the same location you downloaded HoboCopy. 
+   
 ! WHY DOES HOBCOPY USE THE VOLUME SHADOW SERVICE?    
    
 Because HoboCopy copies from a VSS snapshot, it is able copy even files that 
