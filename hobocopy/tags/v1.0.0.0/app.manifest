@@ -1,0 +1,11 @@
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+	<asmv3:trustInfo xmlns:asmv3="urn:schemas-microsoft-com:asm.v3">
+		<asmv3:security>
+			<asmv3:requestedPrivileges>
+				<asmv3:requestedExecutionLevel
+					level="requireAdministrator"
+					uiAccess="false" />
+			</asmv3:requestedPrivileges>
+		</asmv3:security>
+	</asmv3:trustInfo>
+</assembly>
