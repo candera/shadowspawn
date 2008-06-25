@@ -26,7 +26,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 class CParseOptionsException
 {
 private: 
-    LPCTSTR _message; 
+    CString _message; 
 
 public: 
     CParseOptionsException::CParseOptionsException(LPCTSTR message)

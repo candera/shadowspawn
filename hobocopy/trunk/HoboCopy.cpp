@@ -46,10 +46,12 @@ void Cleanup(bool bAbnormalAbort, bool bSnapshotcreated, CComPtr<IVssBackupCompo
 bool Confirm(LPCTSTR message); 
 void CopyRecursive(LPCTSTR wszSource, LPCTSTR wszDestination, bool skipDenied, CCopyFilter& filter);
 BOOL WINAPI CtrlHandler(DWORD dwCtrlType); 
-void DeleteRecursive(LPCTSTR target); 
-void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive);
+void DeleteRecursive(LPCTSTR target, Regex* ignorePattern); 
+void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive, Regex* ignorePattern);
 bool ShouldAddComponent(CWriterComponent& component);
 LPCSTR WideToNarrow(LPCWSTR wsz);
+bool ShouldProcess(Regex* ignorePattern, const CString& path);
+bool ShouldProcess(Regex* ignorePattern, const CString& directory, const CString& name);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -139,7 +141,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
                 if (doDelete)
                 {
-                    DeleteRecursive(options.get_Destination()); 
+                    DeleteRecursive(options.get_Destination(), options.get_IgnorePattern()); 
                 }
             }
         }
@@ -480,7 +482,7 @@ int _tmain(int argc, _TCHAR* argv[])
             filters.push_back(new CFilespecCopyFilter(options.get_Filespecs())); 
 
             CCopyAction copyAction(wszSource, options.get_Destination(), options.get_SkipDenied(), filters); 
-            ProcessDirectory(wszSource, copyAction, TEXT(""), options.get_Recursive()); 
+            ProcessDirectory(wszSource, copyAction, TEXT(""), options.get_Recursive(), options.get_IgnorePattern()); 
 
             for (unsigned int iFilter = 0; iFilter < filters.size(); ++iFilter)
             {
@@ -665,7 +667,7 @@ BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
     return TRUE; 
 
 }
-void DeleteRecursive(LPCTSTR target)
+void DeleteRecursive(LPCTSTR target, Regex* ignorePattern)
 {
     if (!Utilities::DirectoryExists(target))
     {
@@ -677,15 +679,20 @@ void DeleteRecursive(LPCTSTR target)
     }
 
     CDeleteAction deleteAction(target); 
-    ProcessDirectory(target, deleteAction, TEXT(""), true); 
+    ProcessDirectory(target, deleteAction, TEXT(""), true, ignorePattern); 
 }
-void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive)
+void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive, Regex* ignorePattern)
 {
     WIN32_FIND_DATA findData;
     HANDLE hFindHandle;
 
     CString srcdir;
     Utilities::CombinePath(srcbase, directory, srcdir);
+
+	if (!ShouldProcess(ignorePattern, srcdir)) 
+    {
+        return;
+    }
 
     action.VisitDirectoryInitial(directory); 
 
@@ -709,7 +716,11 @@ void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directo
                     {
                         CString subdirectory;
                         Utilities::CombinePath(directory, findData.cFileName, subdirectory);
-                        ProcessDirectory(srcbase, action, subdirectory, recursive);
+						if (!ShouldProcess(ignorePattern, srcbase, subdirectory)) 
+                        {
+                            continue;
+                        }
+						ProcessDirectory(srcbase, action, subdirectory, recursive, ignorePattern);
                     }
                 }
             }
@@ -717,6 +728,7 @@ void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directo
             {
                 CString file; 
                 Utilities::CombinePath(directory, findData.cFileName, file);
+				if (!ShouldProcess(ignorePattern, srcbase, file)) continue;
                 action.VisitFile(file); 
             }
         } while (::FindNextFile(hFindHandle, &findData));
@@ -730,7 +742,6 @@ void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directo
     action.VisitDirectoryFinal(directory); 
 
 }
-
 
 bool ShouldAddComponent(CWriterComponent& component)
 {
@@ -746,4 +757,28 @@ bool ShouldAddComponent(CWriterComponent& component)
 
     return !component.get_HasSelectableAncestor();
 
+}
+
+bool ShouldProcess(Regex* ignorePattern, const CString& path) 
+{
+	if (!ignorePattern)
+    {
+        return true;
+    }
+	CAtlREMatchContext<> ctx;
+	bool ignore = ignorePattern->Match(path, &ctx, NULL) ? true : false;
+	if (ignore) 
+    {
+		CString message;
+		message.Format(TEXT("Ignoring %s"), path);
+		OutputWriter::WriteLine(message); 
+	}
+	return !ignore;
+}
+
+bool ShouldProcess(Regex* ignorePattern, const CString& directory, const CString& name) 
+{
+	CString fullPath;
+	Utilities::CombinePath(directory, name, fullPath);
+	return ShouldProcess(ignorePattern, fullPath);
 }

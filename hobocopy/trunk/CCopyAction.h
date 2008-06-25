@@ -26,6 +26,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "CCopyFilter.h"
 #include "CDirectoryAction.h"
 #include "OutputWriter.h"
+#include "CHoboCopyException.h"
 
 class CCopyAction : public CDirectoryAction
 {
@@ -124,10 +125,10 @@ public:
             {
                 DWORD error = ::GetLastError();
 
-                if (error == 5 && _skipDenied)
+                if ((error == 5 || error == 32) && _skipDenied)
                 {
                     CString message; 
-                    message.Format(TEXT("Error accessing file %s. Skipping."), sourceFile); 
+                    message.Format(TEXT("Error %d accessing file %s. Skipping."), error, sourceFile); 
                     OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
                     ++_skipCount; 
                 }
@@ -148,7 +149,18 @@ public:
                 OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_IF_VERBOSE); 
                 ++_fileCount; 
 
-                _byteCount += Utilities::GetFileSize(sourceFile); 
+                try
+                {
+                    _byteCount += Utilities::GetFileSize(sourceFile); 
+                }
+                catch (CHoboCopyException* x)
+                {
+                    CString message; 
+                    message.AppendFormat(TEXT("Unable to calculate size of file. Size calculations may be incorrect. Message was: %s"), 
+                        x->get_Message()); 
+                    OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_UNLESS_SILENT); 
+                    delete x; 
+                }
             }
         }
         else

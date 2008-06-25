@@ -37,12 +37,13 @@ private:
     bool _debug; 
     CString _destination; 
     vector<CString> _filespecs; 
+    Regex* _ignorePattern;
     bool _recursive; 
     bool _simulate; 
     bool _skipDenied; 
     CString _source; 
     CString _stateFile; 
-    int _verbosityLevel;  
+    int _verbosityLevel;
 
 public: 
     bool get_AcceptAll()
@@ -69,6 +70,10 @@ public:
     {
         return _filespecs; 
     }
+    Regex* get_IgnorePattern(void)
+    {
+        return _ignorePattern;
+    }
     bool get_Recursive(void)
     {
         return _recursive; 
@@ -89,68 +94,72 @@ public:
     {
         return _source.GetString(); 
     }
-
     static LPCTSTR get_Usage(void)
     {
         return TEXT("Usage:\n\n")
-TEXT("hobocopy [/statefile=FILE] [/verbosity=LEVEL] [ /full | /incremental ]\n")
-TEXT("         [ /clear ] [ /skipdenied ] [ /y ] [ /simulate ] [/recursive] \n")
-TEXT("         <src> <dest> [<file> [<file> [ ... ] ]\n")
-TEXT("\n")
-TEXT("Recursively copies a directory tree from <src> to <dest>.\n")
-TEXT("\n")
-TEXT("/statefile   - Specifies a file where information about the copy will\n")
-TEXT("               be written. This argument is required when /incremental\n")
-TEXT("               is specified, as the date and time of the last copy is\n")
-TEXT("               read from this file to determine which files should be\n")
-TEXT("               copied.\n")
-TEXT("\n")
-TEXT("/verbosity   - Specifies how much information HoboCopy will emit\n")
-TEXT("               during copy. Legal values are: 0 - almost no\n")
-TEXT("               information will be emitted. 1 - Only error information\n")
-TEXT("               will be emitted. 2 - Errors and warnings will be\n")
-TEXT("               emitted. 3 - Errors, warnings, and some status\n")
-TEXT("               information will be emitted. 4 - Lots of diagnostic\n")
-TEXT("               information will be emitted. The default level is 2.\n")
-TEXT("\n")
-TEXT("/full        - Perform a full copy. All files will be copied\n")
-TEXT("               regardless of modification date.\n")
-TEXT("\n")
-TEXT("/incremental - Perform an incremental copy. Only files that have\n")
-TEXT("               changed since the last full copy will be copied.\n")
-TEXT("               Specifying this switch requires the /statefile switch\n")
-TEXT("               to be specified, as that's where the date of the last\n")
-TEXT("               full copy is read from.\n")
-TEXT("\n")
-TEXT("/clear       - Recursively delete the destination directory before\n")
-TEXT("               copying. HoboCopy will ask for confirmation before\n")
-TEXT("               deleting unless the /y switch is also specified.\n")
-TEXT("\n")
-TEXT("/skipdenied  - By default, if HoboCopy does not have sufficient\n")
-TEXT("               privilege to copy a file, the copy will fail with an\n")
-TEXT("               error. When the /skipdenied switch is specified,\n")
-TEXT("               permission errors trying to copy a source file result\n")
-TEXT("               in the file being skipped and the copy continuing.\n")
-TEXT("\n")
-TEXT("/y           - Instructs HoboCopy to proceed as if user answered yes\n")
-TEXT("               to any confirmation prompts. Use with caution - in\n")
-TEXT("               combination with the /clear switch, this switch will\n")
-TEXT("               cause the destination directory to be deleted without\n")
-TEXT("               confirmation.\n")
-TEXT("\n")
-TEXT("/simulate    - Simulates copy only - no snapshot is taken and no copy\n")
-TEXT("               is performed.\n")
-TEXT("\n")
-TEXT("/recursive   - Copies subdirectories (including empty ones). Shortcut: /r\n")
-TEXT("\n")
-TEXT("<src>        - The directory to copy (the source directory).\n")
-TEXT("<dest>       - The directory to copy to (the destination directory).\n")
-TEXT("<file>       - A file (e.g. foo.txt) or filespec (e.g. *.txt) to copy.\n")
-TEXT("               Defaults to *.*.\n"); 
+            TEXT("hobocopy [/statefile=FILE] [/verbosity=LEVEL] [/ignorepattern=REGEX]\n")
+            TEXT("         [ /full | /incremental ] [ /clear ] [ /skipdenied ] [ /y ]\n")
+            TEXT("         [ /simulate ] [/recursive]\n")
+            TEXT("         <src> <dest> [<file> [<file> [ ... ] ]\n")
+            TEXT("\n")
+            TEXT("Recursively copies a directory tree from <src> to <dest>.\n")
+            TEXT("\n")
+            TEXT("/statefile   - Specifies a file where information about the copy will\n")
+            TEXT("               be written. This argument is required when /incremental\n")
+            TEXT("               is specified, as the date and time of the last copy is\n")
+            TEXT("               read from this file to determine which files should be\n")
+            TEXT("               copied.\n")
+            TEXT("\n")
+            TEXT("/verbosity   - Specifies how much information HoboCopy will emit\n")
+            TEXT("               during copy. Legal values are: 0 - almost no\n")
+            TEXT("               information will be emitted. 1 - Only error information\n")
+            TEXT("               will be emitted. 2 - Errors and warnings will be\n")
+            TEXT("               emitted. 3 - Errors, warnings, and some status\n")
+            TEXT("               information will be emitted. 4 - Lots of diagnostic\n")
+            TEXT("               information will be emitted. The default level is 2.\n")
+            TEXT("\n")
+            TEXT("/full        - Perform a full copy. All files will be copied\n")
+            TEXT("               regardless of modification date.\n")
+            TEXT("\n")
+            TEXT("/incremental - Perform an incremental copy. Only files that have\n")
+            TEXT("               changed since the last full copy will be copied.\n")
+            TEXT("               Specifying this switch requires the /statefile switch\n")
+            TEXT("               to be specified, as that's where the date of the last\n")
+            TEXT("               full copy is read from.\n")
+            TEXT("\n")
+            TEXT("/clear       - Recursively delete the destination directory before\n")
+            TEXT("               copying. HoboCopy will ask for confirmation before\n")
+            TEXT("               deleting unless the /y switch is also specified.\n")
+            TEXT("\n")
+            TEXT("/skipdenied  - By default, if HoboCopy does not have sufficient\n")
+            TEXT("               privilege to copy a file, the copy will fail with an\n")
+            TEXT("               error. When the /skipdenied switch is specified,\n")
+            TEXT("               permission errors trying to copy a source file result\n")
+            TEXT("               in the file being skipped and the copy continuing.\n")
+            TEXT("\n")
+            TEXT("/y           - Instructs HoboCopy to proceed as if user answered yes\n")
+            TEXT("               to any confirmation prompts. Use with caution - in\n")
+            TEXT("               combination with the /clear switch, this switch will\n")
+            TEXT("               cause the destination directory to be deleted without\n")
+            TEXT("               confirmation.\n")
+            TEXT("\n")
+            TEXT("/simulate    - Simulates copy only - no snapshot is taken and no copy\n")
+            TEXT("               is performed.\n")
+            TEXT("\n")
+            TEXT("/recursive   - Copies subdirectories (including empty ones). Shortcut: /r\n")
+            TEXT("\n")
+            TEXT("/ignorepattern - This is a regular expression that allows you to\n")
+            TEXT("                 designate files or directories that HoboCopy should\n")
+            TEXT("                 not copy nor recurse into.\n")
+            TEXT("\n")
+            TEXT("<src>        - The directory to copy (the source directory).\n")
+            TEXT("<dest>       - The directory to copy to (the destination directory).\n")
+            TEXT("<file>       - A file (e.g. foo.txt) or filespec (e.g. *.txt) to copy.\n")
+            TEXT("               Defaults to *.*.\n"); 
 
-//TEXT("\n")
-//TEXT("\n")
-; 
+        //TEXT("\n")
+        //TEXT("\n")
+        ; 
     }
     int get_VerbosityLevel(void)
     {
@@ -169,6 +178,7 @@ TEXT("               Defaults to *.*.\n");
         options._debug = false; 
         options._simulate = false; 
         options._recursive = false; 
+        options._ignorePattern = NULL;
 
         if (argc < 3)
         {
@@ -203,6 +213,10 @@ TEXT("               Defaults to *.*.\n");
                 else if (Utilities::StartsWith(arg, TEXT("verbosity=")))
                 {
                     options._verbosityLevel = _ttoi(GetArgValue(arg)); 
+                }
+                else if (Utilities::StartsWith(arg, TEXT("ignorepattern=")))
+                {
+                    options._ignorePattern = ParseRegex(GetArgValue(arg));
                 }
                 else if (arg.Compare(TEXT("y")) == 0)
                 {
@@ -316,5 +330,57 @@ private:
             return string.GetString(); 
         }
 
+    }
+    static Regex* ParseRegex(const CString& userInput) 
+    {
+        Regex* regex = new Regex();
+        switch (regex->Parse(userInput.GetString(), FALSE)) 
+        {
+            case REPARSE_ERROR_OK:
+                return regex;
+            case REPARSE_ERROR_OUTOFMEMORY:			
+                ThrowRegexParseException(TEXT("Out of memory"));						
+                break;
+            case REPARSE_ERROR_BRACE_EXPECTED:		
+                ThrowRegexParseException(TEXT("A closing brace was expected"));			
+                break;
+            case REPARSE_ERROR_PAREN_EXPECTED:		
+                ThrowRegexParseException(TEXT("A closing parenthesis was expected"));	
+                break;
+            case REPARSE_ERROR_BRACKET_EXPECTED:	
+                ThrowRegexParseException(TEXT("A closing bracket was expected"));		
+                break;
+            case REPARSE_ERROR_UNEXPECTED:			
+                ThrowRegexParseException(TEXT("An unspecified fatal error occurred"));	
+                break;
+            case REPARSE_ERROR_EMPTY_RANGE:			
+                ThrowRegexParseException(TEXT("A range expression was empty"));			
+                break;
+            case REPARSE_ERROR_INVALID_GROUP:		
+                ThrowRegexParseException(TEXT("A backreference was made to a group that did not exist")); 
+                break;
+            case REPARSE_ERROR_INVALID_RANGE:		
+                ThrowRegexParseException(TEXT("An invalid range was specified"));		
+                break;
+            case REPARSE_ERROR_EMPTY_REPEATOP:		
+                ThrowRegexParseException(TEXT("A possibly empty * or + was detected")); 
+                break;
+            case REPARSE_ERROR_INVALID_INPUT:		
+                ThrowRegexParseException(TEXT("The input string was invalid"));			
+                break;
+            default:                                
+                ThrowRegexParseException(TEXT("Parse failed"));							
+				break;
+        }
+
+		ThrowRegexParseException(TEXT("Parse failed"));							
+		return NULL; 
+
+    }
+    static void ThrowRegexParseException(const TCHAR* pszDetails) 
+    {
+        CString message;
+        message.Format(TEXT("Couldn't parse regular expression supplied to /ignorepattern option (%s)"), pszDetails);
+        throw new CParseOptionsException(message); 
     }
 };

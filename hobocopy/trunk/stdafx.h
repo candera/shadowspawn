@@ -56,6 +56,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <atlbase.h>
 #include <atlstr.h>
+#include <atlrx.h>
+
+typedef CAtlRegExp<> Regex;
 
 // TODO: reference additional headers your program requires here
 #include <iostream> 

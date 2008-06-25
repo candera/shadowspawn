@@ -380,6 +380,18 @@ public:
 
     static bool IsMatch(CString& input, CString& pattern)
     {
+        // Short-circuit common cases
+        if (pattern.Compare(TEXT("*")) == 0)
+        {
+            return true; 
+        }
+
+        if (pattern.Compare(TEXT("*.*")) == 0)
+        {
+            return true; 
+
+        }
+
         int nStars = 0; 
         for (int iChar = 0; iChar < pattern.GetLength(); ++iChar)
         {
@@ -400,18 +412,6 @@ public:
         if (nStars == 0)
         {
             return input.CompareNoCase(pattern) == 0; 
-        }
-
-        // Short-circuit common cases
-        if (pattern.Compare(TEXT("*")) == 0)
-        {
-            return true; 
-        }
-
-        if (pattern.Compare(TEXT("*.*")) == 0)
-        {
-            return true; 
-
         }
 
         // A wildcard is present
