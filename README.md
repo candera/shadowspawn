@@ -43,9 +43,9 @@ That said, the author of the tool uses it to back up his own systems.
 <pre>
 hobocopy [/statefile=FILE] [/verbosity=LEVEL] [ /full | /incremental ]
          [ /clear ] [ /skipdenied ] [ /y ] [ /simulate ] [/recursive]
-         <src> <dest> [file [file [ ... ] ]
+         src dest [file [file [ ... ] ]
 
-Recursively copies a directory tree from <src> to <dest>.
+Recursively copies a directory tree from src to dest.
 
 /statefile   - Specifies a file where information about the copy will
                be written. This argument is required when /incremental
@@ -91,8 +91,8 @@ Recursively copies a directory tree from <src> to <dest>.
 
 /recursive   - Copies subdirectories (including empty ones). Shortcut: /r
 
-<src>        - The directory to copy (the source directory).
-<dest>       - The directory to copy to (the destination directory).
-<file>       - A file (e.g. foo.txt) or filespec (e.g. *.txt) to copy.
+src          - The directory to copy (the source directory).
+dest         - The directory to copy to (the destination directory).
+file         - A file (e.g. foo.txt) or filespec (e.g. *.txt) to copy.
                Defaults to *.*.
 </pre>
