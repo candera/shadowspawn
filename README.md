@@ -62,7 +62,7 @@ Recursively copies a directory tree from src to dest.
                information will be emitted. The default level is 2.
 
 /full        - Perform a full copy. All files will be copied
-              regardless of modification date.
+               regardless of modification date.
 
 /incremental - Perform an incremental copy. Only files that have
                changed since the last full copy will be copied.
@@ -71,8 +71,8 @@ Recursively copies a directory tree from src to dest.
                full copy is read from.
 
 /clear       - Recursively delete the destination directory before
-              copying. HoboCopy will ask for confirmation before
-              deleting unless the /y switch is also specified.
+               copying. HoboCopy will ask for confirmation before
+               deleting unless the /y switch is also specified.
 
 /skipdenied  - By default, if HoboCopy does not have sufficient
                privilege to copy a file, the copy will fail with an
