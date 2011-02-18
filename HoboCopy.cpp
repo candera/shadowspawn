@@ -178,7 +178,7 @@ int _tmain(int argc, _TCHAR* argv[])
         OutputWriter::WriteLine(TEXT("Calling GatherWriterMetadata")); 
         CHECK_HRESULT(pBackupComponents->GatherWriterMetadata(&pWriterMetadataStatus)); 
 
-        OutputWriter::WriteLine(TEXT("Waiting for writer metadata")); 
+        OutputWriter::WriteLine(TEXT("Waiting for call to GatherWriterMetadata to finish...")); 
         CHECK_HRESULT(pWriterMetadataStatus->Wait()); 
 
         HRESULT hrGatherStatus; 
@@ -189,6 +189,9 @@ int _tmain(int argc, _TCHAR* argv[])
         {
             throw new CHoboCopyException(L"GatherWriterMetadata was cancelled."); 
         }
+
+		OutputWriter::WriteLine(TEXT("Call to GatherWriterMetadata finished.")); 
+
 
         OutputWriter::WriteLine(TEXT("Calling GetWriterMetadataCount")); 
 
@@ -394,6 +397,7 @@ int _tmain(int argc, _TCHAR* argv[])
         CComPtr<IVssAsync> pPrepareForBackupResults; 
         CHECK_HRESULT(pBackupComponents->PrepareForBackup(&pPrepareForBackupResults)); 
 
+        OutputWriter::WriteLine(TEXT("Waiting for call to PrepareForBackup to finish...")); 
         CHECK_HRESULT(pPrepareForBackupResults->Wait()); 
 
         HRESULT hrPrepareForBackupResults; 
@@ -404,6 +408,8 @@ int _tmain(int argc, _TCHAR* argv[])
             throw new CHoboCopyException(TEXT("Prepare for backup failed.")); 
         }
 
+        OutputWriter::WriteLine(TEXT("Call to PrepareForBackup finished.")); 
+		
         SYSTEMTIME snapshotTime; 
         ::GetSystemTime(&snapshotTime); 
 
@@ -421,6 +427,8 @@ int _tmain(int argc, _TCHAR* argv[])
             CComPtr<IVssAsync> pDoSnapshotSetResults;
             CHECK_HRESULT(pBackupComponents->DoSnapshotSet(&pDoSnapshotSetResults)); 
 
+            OutputWriter::WriteLine(TEXT("Waiting for call to DoSnapshotSet to finish...")); 
+		   
             CHECK_HRESULT(pDoSnapshotSetResults->Wait());
 
             bSnapshotCreated = true; 
@@ -444,6 +452,8 @@ int _tmain(int argc, _TCHAR* argv[])
             {
                 throw new CHoboCopyException(L"DoSnapshotSet failed."); 
             }
+
+	        OutputWriter::WriteLine(TEXT("Call to DoSnapshotSet finished.")); 
 
             OutputWriter::WriteLine(TEXT("Calling GetSnapshotProperties")); 
             VSS_SNAPSHOT_PROP snapshotProperties; 
@@ -498,13 +508,18 @@ int _tmain(int argc, _TCHAR* argv[])
             CComPtr<IVssAsync> pBackupCompleteResults; 
             CHECK_HRESULT(pBackupComponents->BackupComplete(&pBackupCompleteResults)); 
 
+            OutputWriter::WriteLine(TEXT("Waiting for call to BackupComplete to finish...")); 
+			CHECK_HRESULT(pBackupCompleteResults->Wait());
+
             HRESULT hrBackupCompleteResults; 
             CHECK_HRESULT(pBackupCompleteResults->QueryStatus(&hrBackupCompleteResults, NULL)); 
 
-            if (hrPrepareForBackupResults != VSS_S_ASYNC_FINISHED)
+            if (hrBackupCompleteResults != VSS_S_ASYNC_FINISHED)
             {
                 throw new CHoboCopyException(TEXT("Completion of backup failed.")); 
             }
+
+            OutputWriter::WriteLine(TEXT("Call to BackupComplete finished.")); 
 
             bAbnormalAbort = false; 
 
