@@ -5,3 +5,4 @@ Release-*
 *.sdf
 *.opensdf
 ipch
+x64

@@ -46,12 +46,12 @@ void Cleanup(bool bAbnormalAbort, bool bSnapshotcreated, CComPtr<IVssBackupCompo
 bool Confirm(LPCTSTR message); 
 void CopyRecursive(LPCTSTR wszSource, LPCTSTR wszDestination, bool skipDenied, CCopyFilter& filter);
 BOOL WINAPI CtrlHandler(DWORD dwCtrlType); 
-void DeleteRecursive(LPCTSTR target, Regex* ignorePattern); 
-void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive, Regex* ignorePattern);
+void DeleteRecursive(LPCTSTR target, wregex* ignorePattern); 
+void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive, wregex* ignorePattern);
 bool ShouldAddComponent(CWriterComponent& component);
 LPCSTR WideToNarrow(LPCWSTR wsz);
-bool ShouldProcess(Regex* ignorePattern, const CString& path);
-bool ShouldProcess(Regex* ignorePattern, const CString& directory, const CString& name);
+bool ShouldProcess(wregex* ignorePattern, const CString& path);
+bool ShouldProcess(wregex* ignorePattern, const CString& directory, const CString& name);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -667,7 +667,7 @@ BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
     return TRUE; 
 
 }
-void DeleteRecursive(LPCTSTR target, Regex* ignorePattern)
+void DeleteRecursive(LPCTSTR target, wregex* ignorePattern)
 {
     if (!Utilities::DirectoryExists(target))
     {
@@ -681,7 +681,7 @@ void DeleteRecursive(LPCTSTR target, Regex* ignorePattern)
     CDeleteAction deleteAction(target); 
     ProcessDirectory(target, deleteAction, TEXT(""), true, ignorePattern); 
 }
-void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive, Regex* ignorePattern)
+void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive, wregex* ignorePattern)
 {
     WIN32_FIND_DATA findData;
     HANDLE hFindHandle;
@@ -759,15 +759,19 @@ bool ShouldAddComponent(CWriterComponent& component)
 
 }
 
-bool ShouldProcess(Regex* ignorePattern, const CString& path) 
+bool IsMatch(wregex* pattern, const CString& input)
+{
+	return regex_match(input.GetString(), *pattern); 
+}
+
+bool ShouldProcess(wregex* ignorePattern, const CString& path) 
 {
 	if (!ignorePattern)
     {
         return true;
     }
-	CAtlREMatchContext<> ctx;
-	bool ignore = ignorePattern->Match(path, &ctx, NULL) ? true : false;
-	if (ignore) 
+	bool ignore = IsMatch(ignorePattern, path);
+	if (ignore)
     {
 		CString message;
 		message.Format(TEXT("Ignoring %s"), path);
@@ -776,7 +780,7 @@ bool ShouldProcess(Regex* ignorePattern, const CString& path)
 	return !ignore;
 }
 
-bool ShouldProcess(Regex* ignorePattern, const CString& directory, const CString& name) 
+bool ShouldProcess(wregex* ignorePattern, const CString& directory, const CString& name) 
 {
 	CString fullPath;
 	Utilities::CombinePath(directory, name, fullPath);

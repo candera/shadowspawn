@@ -56,9 +56,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <atlbase.h>
 #include <atlstr.h>
-#include <atlrx.h>
-
-typedef CAtlRegExp<> Regex;
 
 // TODO: reference additional headers your program requires here
 #include <iostream> 
@@ -72,6 +69,10 @@ typedef CAtlRegExp<> Regex;
 
 //#import <msxml3.dll> raw_interfaces_only
 #include <msxml2.h>
+
+#include <regex>
+
+using namespace std;
 
 #define CHECK_HRESULT(x) { HRESULT ckhr = ((x)); if (ckhr != S_OK) throw new CComException(ckhr, __FILE__, __LINE__); }
 

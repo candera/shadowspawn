@@ -37,7 +37,7 @@ private:
     bool _debug; 
     CString _destination; 
     vector<CString> _filespecs; 
-    Regex* _ignorePattern;
+    std::wregex* _ignorePattern;
     bool _recursive; 
     bool _simulate; 
     bool _skipDenied; 
@@ -70,7 +70,7 @@ public:
     {
         return _filespecs; 
     }
-    Regex* get_IgnorePattern(void)
+    wregex* get_IgnorePattern(void)
     {
         return _ignorePattern;
     }
@@ -97,7 +97,7 @@ public:
     static LPCTSTR get_Usage(void)
     {
         return TEXT("Usage:\n\n")
-            TEXT("hobocopy [/statefile=FILE] [/verbosity=LEVEL] [/ignorepattern=REGEX]\n")
+            TEXT("hobocopy [/statefile=FILE] [/verbosity=LEVEL]\n")
             TEXT("         [ /full | /incremental ] [ /clear ] [ /skipdenied ] [ /y ]\n")
             TEXT("         [ /simulate ] [/recursive]\n")
             TEXT("         <src> <dest> [<file> [<file> [ ... ] ]\n")
@@ -147,10 +147,6 @@ public:
             TEXT("               is performed.\n")
             TEXT("\n")
             TEXT("/recursive   - Copies subdirectories (including empty ones). Shortcut: /r\n")
-            TEXT("\n")
-            TEXT("/ignorepattern - This is a regular expression that allows you to\n")
-            TEXT("                 designate files or directories that HoboCopy should\n")
-            TEXT("                 not copy nor recurse into.\n")
             TEXT("\n")
             TEXT("<src>        - The directory to copy (the source directory).\n")
             TEXT("<dest>       - The directory to copy to (the destination directory).\n")
@@ -216,7 +212,7 @@ public:
                 }
                 else if (Utilities::StartsWith(arg, TEXT("ignorepattern=")))
                 {
-                    options._ignorePattern = ParseRegex(GetArgValue(arg));
+                    throw new CParseOptionsException(CString("The ignorepattern switch is no longer supported."));
                 }
                 else if (arg.Compare(TEXT("y")) == 0)
                 {
@@ -331,47 +327,73 @@ private:
         }
 
     }
-    static Regex* ParseRegex(const CString& userInput) 
+    static wregex* ParseRegex(const CString& userInput) 
     {
-        Regex* regex = new Regex();
-        switch (regex->Parse(userInput.GetString(), FALSE)) 
-        {
-            case REPARSE_ERROR_OK:
-                return regex;
-            case REPARSE_ERROR_OUTOFMEMORY:			
-                ThrowRegexParseException(TEXT("Out of memory"));						
+		try
+		{
+			return new wregex(userInput.GetString());
+		}
+		catch (regex_error err)
+		{
+			switch (err.code()) 
+			{
+			case regex_constants::error_badbrace:
+				ThrowRegexParseException(TEXT("The expression contained an invlid count in a { } expression"));			
                 break;
-            case REPARSE_ERROR_BRACE_EXPECTED:		
-                ThrowRegexParseException(TEXT("A closing brace was expected"));			
-                break;
-            case REPARSE_ERROR_PAREN_EXPECTED:		
-                ThrowRegexParseException(TEXT("A closing parenthesis was expected"));	
-                break;
-            case REPARSE_ERROR_BRACKET_EXPECTED:	
-                ThrowRegexParseException(TEXT("A closing bracket was expected"));		
-                break;
-            case REPARSE_ERROR_UNEXPECTED:			
-                ThrowRegexParseException(TEXT("An unspecified fatal error occurred"));	
-                break;
-            case REPARSE_ERROR_EMPTY_RANGE:			
-                ThrowRegexParseException(TEXT("A range expression was empty"));			
-                break;
-            case REPARSE_ERROR_INVALID_GROUP:		
-                ThrowRegexParseException(TEXT("A backreference was made to a group that did not exist")); 
-                break;
-            case REPARSE_ERROR_INVALID_RANGE:		
-                ThrowRegexParseException(TEXT("An invalid range was specified"));		
-                break;
-            case REPARSE_ERROR_EMPTY_REPEATOP:		
-                ThrowRegexParseException(TEXT("A possibly empty * or + was detected")); 
-                break;
-            case REPARSE_ERROR_INVALID_INPUT:		
-                ThrowRegexParseException(TEXT("The input string was invalid"));			
-                break;
+
+			case regex_constants::error_badrepeat:
+				ThrowRegexParseException(TEXT("A repeat expression (one of '*', '?', '+', '{' in most contexts) was not preceded by an expression"));
+				break;
+
+			case regex_constants::error_brace:
+				ThrowRegexParseException(TEXT("The expression contained an unmatched '{' or '}'"));
+				break;
+
+			case regex_constants::error_brack:
+				ThrowRegexParseException(TEXT("The expression contained an unmatched '[' or ']'"));
+				break;
+
+			case regex_constants::error_collate:
+				ThrowRegexParseException(TEXT("The expression contained an invalid collating element name"));
+				break;
+
+			case regex_constants::error_complexity:
+				ThrowRegexParseException(TEXT("An attempted match failed because it was too complex"));
+				break;
+
+			case regex_constants::error_ctype:
+				ThrowRegexParseException(TEXT("The expression contained an invalid character class name"));
+				break;
+
+			case regex_constants::error_escape:
+				ThrowRegexParseException(TEXT("The expression contained an invalid escape sequence"));
+				break;
+
+			case regex_constants::error_paren:
+				ThrowRegexParseException(TEXT("The expression contained an unmatched '(' or ')'"));
+				break;
+
+			case regex_constants::error_range:
+				ThrowRegexParseException(TEXT("The expression contained an invalid character range specifier"));
+				break;
+
+			case regex_constants::error_space:
+				ThrowRegexParseException(TEXT("Parsing a regular expression failed because there were not enough resources available"));
+				break;
+
+			case regex_constants::error_stack:
+				ThrowRegexParseException(TEXT("An attempted match failed because there was not enough memory available"));
+				break;
+
+			case regex_constants::error_backref:
+				ThrowRegexParseException(TEXT("The expression contained an invalid back reference"));
+				break;
+
             default:                                
                 ThrowRegexParseException(TEXT("Parse failed"));							
 				break;
-        }
+			}
+		}
 
 		ThrowRegexParseException(TEXT("Parse failed"));							
 		return NULL; 
