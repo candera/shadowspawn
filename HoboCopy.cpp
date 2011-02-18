@@ -83,6 +83,13 @@ int _tmain(int argc, _TCHAR* argv[])
 
         OutputWriter::SetVerbosityLevel((VERBOSITY_LEVEL) options.get_VerbosityLevel()); 
 
+		for (int i = 0; i < argc; ++i)
+		{
+			CString message; 
+			message.AppendFormat(TEXT("Argument %d: %s"), i, argv[i]);
+			OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_IF_VERBOSE);
+		}
+
         OutputWriter::WriteLine(TEXT("Calling CoInitialize")); 
         CHECK_HRESULT(::CoInitialize(NULL)); 
         CHECK_HRESULT(
