@@ -78,6 +78,13 @@ public:
 #endif
     }
 
+	/* Test cases: 
+		\\server\share\path\to\dir
+		C:\path\to\dir
+		C:\ - does nothing
+		\\server\share - does nothing
+		\path\to\dir - use current drive
+	*/
     static void CreateDirectory(LPCTSTR directory)
     {
         vector<CString> pathComponents; 
@@ -85,8 +92,20 @@ public:
         GetPathComponents(path, pathComponents); 
 
         CString pathToCreate; 
+		unsigned int initialIndex = 0; 
+		bool isUNC = path.Left(2) == _T("\\\\");
 
-        for (unsigned int iComponent = 0; iComponent < pathComponents.size(); ++iComponent)
+		if (isUNC)
+		{
+			initialIndex = 2;
+			pathToCreate.Append(__T("\\\\"));
+			pathToCreate.Append(pathComponents[0]);
+			pathToCreate.AppendChar(__T('\\'));
+			pathToCreate.Append(pathComponents[1]);
+			pathToCreate.AppendChar(__T('\\'));
+		}
+
+        for (unsigned int iComponent = initialIndex; iComponent < pathComponents.size(); ++iComponent)
         {
             pathToCreate.Append(pathComponents[iComponent]); 
             pathToCreate.AppendChar(TEXT('\\')); 
