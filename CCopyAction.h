@@ -84,33 +84,13 @@ public:
     {
         CString destDir;
         Utilities::CombinePath(_destination, path, destDir);
-        Utilities::FixLongFilenames(destDir); 
-
-        BOOL bCreated = ::CreateDirectory(destDir, NULL);
-
-        if (!bCreated)
-        {
-            DWORD error = ::GetLastError(); 
-
-            if (error != ERROR_ALREADY_EXISTS)
-            {
-                CString errorMessage; 
-                Utilities::FormatErrorMessage(error, errorMessage); 
-                CString message; 
-                message.AppendFormat(TEXT("Creation of directory failed with error %s on directory %s"), 
-                    errorMessage, destDir); 
-                throw new CHoboCopyException(message);
-            }
-        }
-        else
-        {
-            CString message; 
-            message.AppendFormat(TEXT("Created directory %s"), destDir); 
-            OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_IF_VERBOSE); 
-        }
-
+		Utilities::CreateDirectory(destDir);
+		CString message; 
+		message.AppendFormat(TEXT("Created directory %s"), destDir); 
+		OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_IF_VERBOSE); 
     }
-    void VisitFile(LPCTSTR path) 
+
+	void VisitFile(LPCTSTR path) 
     {
         CString sourceFile;
         Utilities::CombinePath(_source, path, sourceFile);

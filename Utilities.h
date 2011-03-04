@@ -115,7 +115,7 @@ public:
                 BOOL bWorked = ::CreateDirectory(pathToCreate, NULL);
 
                 if (!bWorked)
-                {
+				{
                     DWORD error = ::GetLastError(); 
                     CString errorMessage; 
                     FormatErrorMessage(error, errorMessage); 
@@ -154,40 +154,6 @@ public:
         }
 
         return false; 
-
-        ////HANDLE hDirectory = ::CreateFile(
-        ////    directory, 
-        ////    0, 
-        ////    FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, 
-        ////    NULL, 
-        ////    OPEN_EXISTING,
-        ////    FILE_ATTRIBUTE_NORMAL, 
-        ////    NULL); 
-
-        //if (hDirectory == INVALID_HANDLE_VALUE)
-        //{
-        //    DWORD error = ::GetLastError();
-
-        //    if (error == 2)
-        //    {
-        //        return false; 
-        //    }
-        //    else
-        //    {
-        //        CString errorMessage; 
-        //        Utilities::FormatErrorMessage(error, errorMessage); 
-        //        CString message; 
-        //        message.AppendFormat(TEXT("Unable to determine if directory %s exists. Error was %s."), 
-        //            directory, errorMessage);
-        //        throw new CHoboCopyException(message); 
-        //    }
-        //}
-        //else
-        //{
-        //    ::CloseHandle(hDirectory); 
-        //    return true; 
-        //}   
-
     }
 
     static bool EndsWith(LPCTSTR wsz, size_t maxLength, TCHAR wchar)
