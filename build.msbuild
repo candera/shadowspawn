@@ -1,0 +1,16 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <ItemGroup>
+        <ProjectToBuild Include="HoboCopy.sln">
+            <Properties>Configuration=Release-W2K3;Platform=x86</Properties>
+        </ProjectToBuild>
+      <ProjectToBuild Include="HoboCopy.sln">
+        <Properties>Configuration=Release-W2K3;Platform=x64</Properties>
+      </ProjectToBuild>
+      <ProjectToBuild Include="HoboCopy.sln">
+            <Properties>Configuration=Release-XP;Platform=x86</Properties>
+        </ProjectToBuild>
+    </ItemGroup>
+    <Target Name="Build">
+        <MSBuild Projects="@(ProjectToBuild)"/>
+    </Target>
+</Project>
