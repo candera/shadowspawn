@@ -167,38 +167,38 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">bin\$(Configuration)\$(PlatformName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">tmp\$(Configuration)\$(PlatformName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-XP|Win32'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-XP|Win32'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug-XP|Win32'">true</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-XP|x64'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-XP|x64'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-XP|x64'">bin\$(Configuration)\$(PlatformName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-XP|x64'">tmp\$(Configuration)\$(PlatformName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug-XP|x64'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-XP|Win32'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-XP|Win32'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release-XP|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-XP|x64'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-XP|x64'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-XP|x64'">bin\$(Configuration)\$(PlatformName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-XP|x64'">tmp\$(Configuration)\$(PlatformName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release-XP|x64'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-W2K3|Win32'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-W2K3|Win32'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release-W2K3|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-W2K3|x64'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-W2K3|x64'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-W2K3|x64'">bin\$(Configuration)\$(PlatformName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-W2K3|x64'">tmp\$(Configuration)\$(PlatformName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release-W2K3|x64'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-W2K3|Win32'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-W2K3|Win32'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug-W2K3|Win32'">true</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-W2K3|x64'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-W2K3|x64'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-W2K3|x64'">bin\$(Configuration)\$(PlatformName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-W2K3|x64'">tmp\$(Configuration)\$(PlatformName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug-W2K3|x64'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-x64|Win32'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-x64|Win32'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release-x64|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-x64|x64'">bin\$(Configuration)\$(PlatformShortName)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-x64|x64'">tmp\$(Configuration)\$(PlatformShortName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release-x64|x64'">bin\$(Configuration)\$(PlatformName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release-x64|x64'">tmp\$(Configuration)\$(PlatformName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release-x64|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release-x64|x64'">true</GenerateManifest>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug-W2K3|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
@@ -438,7 +438,7 @@
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>inc\win2003;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -495,7 +495,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>inc\win2003;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
