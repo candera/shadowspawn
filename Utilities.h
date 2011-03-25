@@ -112,7 +112,9 @@ public:
 
             if (!DirectoryExists(pathToCreate))
             {
-                BOOL bWorked = ::CreateDirectory(pathToCreate, NULL);
+				CString fixedPath(pathToCreate);
+				FixLongFilenames(fixedPath);
+                BOOL bWorked = ::CreateDirectory(fixedPath, NULL);
 
                 if (!bWorked)
 				{
@@ -120,7 +122,7 @@ public:
                     CString errorMessage; 
                     FormatErrorMessage(error, errorMessage); 
                     CString message;
-                    message.AppendFormat(TEXT("Failure creating directory %s - %s"), pathToCreate, errorMessage); 
+                    message.AppendFormat(TEXT("Failure creating directory %s (as %s) - %s"), pathToCreate, fixedPath, errorMessage); 
                     throw new CHoboCopyException(message); 
                 }
             }
@@ -128,8 +130,11 @@ public:
     }
     static bool DirectoryExists(LPCTSTR directory)
     {
-        WIN32_FILE_ATTRIBUTE_DATA attributes; 
-        BOOL bWorked = ::GetFileAttributesEx(directory, GetFileExInfoStandard, &attributes); 
+		CString fixedPath(directory);
+		FixLongFilenames(fixedPath);
+
+		WIN32_FILE_ATTRIBUTE_DATA attributes; 
+        BOOL bWorked = ::GetFileAttributesEx(fixedPath, GetFileExInfoStandard, &attributes); 
 
         if (!bWorked)
         {
@@ -143,8 +148,8 @@ public:
             CString errorMessage; 
             Utilities::FormatErrorMessage(error, errorMessage); 
             CString message; 
-            message.AppendFormat(TEXT("Unable to determine if directory %s exists. Error was %s."), 
-                directory, errorMessage);
+            message.AppendFormat(TEXT("Unable to determine if directory %s (as %s) exists. Error was %s."), 
+                directory, fixedPath, errorMessage);
             throw new CHoboCopyException(message); 
         }
 
