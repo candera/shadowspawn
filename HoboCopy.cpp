@@ -721,10 +721,13 @@ void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directo
     CString pattern;
     Utilities::CombinePath(srcdir, TEXT("*"), pattern);
 
+	Utilities::FixLongFilenames(pattern);
+
     hFindHandle = ::FindFirstFile(pattern, &findData);
     if (hFindHandle != INVALID_HANDLE_VALUE)
     {
-        do
+		BOOL done = false;
+        while (!done)
         {
             if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
             {
@@ -753,10 +756,45 @@ void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directo
 				if (!ShouldProcess(ignorePattern, srcbase, file)) continue;
                 action.VisitFile(file); 
             }
-        } while (::FindNextFile(hFindHandle, &findData));
 
+			BOOL worked = ::FindNextFile(hFindHandle, &findData);
+
+			if (!worked)
+			{
+				int error = GetLastError(); 
+
+				if (error == ERROR_NO_MORE_FILES)
+				{
+					done = true; 
+				}
+				else
+				{
+					CString errorMessage; 
+					Utilities::FormatErrorMessage(error, errorMessage); 
+					CString message; 
+					message.AppendFormat(TEXT("There was an error calling FindNextFile. Path: %s Error: %s"), 
+						pattern, errorMessage); 
+					throw new CHoboCopyException(message.GetString()); 
+				}
+			}
+        } 
     }
+	else 
+	{
+		int error = GetLastError(); 
+
+		if (error != ERROR_FILE_NOT_FOUND)
+		{
+            CString errorMessage; 
+            Utilities::FormatErrorMessage(error, errorMessage); 
+            CString message; 
+            message.AppendFormat(TEXT("There was an error calling FindFirstFile. Path: %s Error: %s"), 
+                pattern, errorMessage); 
+            throw new CHoboCopyException(message.GetString()); 
+		}
+	}
     ::FindClose(hFindHandle);
+
 
     // Important to put this after FindClose, since otherwise there's still an 
     // open handle to the directory, and that can interfere with (e.g.) directory
