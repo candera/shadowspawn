@@ -6,3 +6,4 @@ Release-*
 *.opensdf
 ipch
 x64
+bin
