@@ -79,13 +79,13 @@ public:
 #endif
     }
 
-	/* Test cases: 
-		\\server\share\path\to\dir
-		C:\path\to\dir
-		C:\ - does nothing
-		\\server\share - does nothing
-		\path\to\dir - use current drive
-	*/
+    /* Test cases: 
+    \\server\share\path\to\dir
+    C:\path\to\dir
+    C:\ - does nothing
+    \\server\share - does nothing
+    \path\to\dir - use current drive
+    */
     static void CreateDirectory(LPCTSTR directory)
     {
         vector<CString> pathComponents; 
@@ -93,18 +93,18 @@ public:
         GetPathComponents(path, pathComponents); 
 
         CString pathToCreate; 
-		unsigned int initialIndex = 0; 
-		bool isUNC = path.Left(2) == _T("\\\\");
+        unsigned int initialIndex = 0; 
+        bool isUNC = path.Left(2) == _T("\\\\");
 
-		if (isUNC)
-		{
-			initialIndex = 2;
-			pathToCreate.Append(__T("\\\\"));
-			pathToCreate.Append(pathComponents[0]);
-			pathToCreate.AppendChar(__T('\\'));
-			pathToCreate.Append(pathComponents[1]);
-			pathToCreate.AppendChar(__T('\\'));
-		}
+        if (isUNC)
+        {
+            initialIndex = 2;
+            pathToCreate.Append(__T("\\\\"));
+            pathToCreate.Append(pathComponents[0]);
+            pathToCreate.AppendChar(__T('\\'));
+            pathToCreate.Append(pathComponents[1]);
+            pathToCreate.AppendChar(__T('\\'));
+        }
 
         for (unsigned int iComponent = initialIndex; iComponent < pathComponents.size(); ++iComponent)
         {
@@ -113,12 +113,12 @@ public:
 
             if (!DirectoryExists(pathToCreate))
             {
-				CString fixedPath(pathToCreate);
-				FixLongFilenames(fixedPath);
+                CString fixedPath(pathToCreate);
+                FixLongFilenames(fixedPath);
                 BOOL bWorked = ::CreateDirectory(fixedPath, NULL);
 
                 if (!bWorked)
-				{
+                {
                     DWORD error = ::GetLastError(); 
                     CString errorMessage; 
                     FormatErrorMessage(error, errorMessage); 
@@ -131,10 +131,10 @@ public:
     }
     static bool DirectoryExists(LPCTSTR directory)
     {
-		CString fixedPath(directory);
-		FixLongFilenames(fixedPath);
+        CString fixedPath(directory);
+        FixLongFilenames(fixedPath);
 
-		WIN32_FILE_ATTRIBUTE_DATA attributes; 
+        WIN32_FILE_ATTRIBUTE_DATA attributes; 
         BOOL bWorked = ::GetFileAttributesEx(fixedPath, GetFileExInfoStandard, &attributes); 
 
         if (!bWorked)

@@ -32,8 +32,8 @@ class COptions
 {
 private: 
     string _command;
-	vector<string> _commandArgs; 
-	bool _debug; 
+    vector<string> _commandArgs; 
+    bool _debug; 
     CString _destination; 
     bool _simulate; 
     CString _source; 
@@ -84,12 +84,12 @@ public:
             TEXT("\n")
             TEXT("<src>        - The directory to shadow copy (the source directory).\n")
             TEXT("<drive:>     - Where to mount the shadow copy. Must be a single letter\n")
-			TEXT("               followed by a colon. E.g. 'X:'. The drive letter must be\n")
-			TEXT("               available (i.e. nothing else mounted there).\n")
-			TEXT("<command>    - A command to run. ShadowSpawn will ensure that <src> is\n")
-			TEXT("               mounted at <drive:> before starting <command>, and will\n")
-			TEXT("               wait for <command> to finish before unmounting <drive:>\n")
-        ; 
+            TEXT("               followed by a colon. E.g. 'X:'. The drive letter must be\n")
+            TEXT("               available (i.e. nothing else mounted there).\n")
+            TEXT("<command>    - A command to run. ShadowSpawn will ensure that <src> is\n")
+            TEXT("               mounted at <drive:> before starting <command>, and will\n")
+            TEXT("               wait for <command> to finish before unmounting <drive:>\n")
+            ; 
     }
     int get_VerbosityLevel(void)
     {
@@ -118,7 +118,7 @@ public:
             {
                 arg = arg.Mid(1);
 
-				if (Utilities::StartsWith(arg, TEXT("verbosity=")))
+                if (Utilities::StartsWith(arg, TEXT("verbosity=")))
                 {
                     options._verbosityLevel = _ttoi(GetArgValue(arg)); 
                 }
@@ -147,10 +147,10 @@ public:
                 {
                     options._destination = argv[i]; 
                 }
-				else if (options._command.empty())
-				{
-					options._command.assign(Utilities::ConvertToMultibyteString(argv[i]));
-				}
+                else if (options._command.empty())
+                {
+                    options._command.assign(Utilities::ConvertToMultibyteString(argv[i]));
+                }
                 else
                 {
                     options._commandArgs.push_back(Utilities::ConvertToMultibyteString(argv[i])); 
@@ -224,74 +224,74 @@ private:
     }
     static wregex* ParseRegex(const CString& userInput) 
     {
-		try
-		{
-			return new wregex(userInput.GetString());
-		}
-		catch (regex_error err)
-		{
-			switch (err.code()) 
-			{
-			case regex_constants::error_badbrace:
-				ThrowRegexParseException(TEXT("The expression contained an invlid count in a { } expression"));			
+        try
+        {
+            return new wregex(userInput.GetString());
+        }
+        catch (regex_error err)
+        {
+            switch (err.code()) 
+            {
+            case regex_constants::error_badbrace:
+                ThrowRegexParseException(TEXT("The expression contained an invlid count in a { } expression"));			
                 break;
 
-			case regex_constants::error_badrepeat:
-				ThrowRegexParseException(TEXT("A repeat expression (one of '*', '?', '+', '{' in most contexts) was not preceded by an expression"));
-				break;
+            case regex_constants::error_badrepeat:
+                ThrowRegexParseException(TEXT("A repeat expression (one of '*', '?', '+', '{' in most contexts) was not preceded by an expression"));
+                break;
 
-			case regex_constants::error_brace:
-				ThrowRegexParseException(TEXT("The expression contained an unmatched '{' or '}'"));
-				break;
+            case regex_constants::error_brace:
+                ThrowRegexParseException(TEXT("The expression contained an unmatched '{' or '}'"));
+                break;
 
-			case regex_constants::error_brack:
-				ThrowRegexParseException(TEXT("The expression contained an unmatched '[' or ']'"));
-				break;
+            case regex_constants::error_brack:
+                ThrowRegexParseException(TEXT("The expression contained an unmatched '[' or ']'"));
+                break;
 
-			case regex_constants::error_collate:
-				ThrowRegexParseException(TEXT("The expression contained an invalid collating element name"));
-				break;
+            case regex_constants::error_collate:
+                ThrowRegexParseException(TEXT("The expression contained an invalid collating element name"));
+                break;
 
-			case regex_constants::error_complexity:
-				ThrowRegexParseException(TEXT("An attempted match failed because it was too complex"));
-				break;
+            case regex_constants::error_complexity:
+                ThrowRegexParseException(TEXT("An attempted match failed because it was too complex"));
+                break;
 
-			case regex_constants::error_ctype:
-				ThrowRegexParseException(TEXT("The expression contained an invalid character class name"));
-				break;
+            case regex_constants::error_ctype:
+                ThrowRegexParseException(TEXT("The expression contained an invalid character class name"));
+                break;
 
-			case regex_constants::error_escape:
-				ThrowRegexParseException(TEXT("The expression contained an invalid escape sequence"));
-				break;
+            case regex_constants::error_escape:
+                ThrowRegexParseException(TEXT("The expression contained an invalid escape sequence"));
+                break;
 
-			case regex_constants::error_paren:
-				ThrowRegexParseException(TEXT("The expression contained an unmatched '(' or ')'"));
-				break;
+            case regex_constants::error_paren:
+                ThrowRegexParseException(TEXT("The expression contained an unmatched '(' or ')'"));
+                break;
 
-			case regex_constants::error_range:
-				ThrowRegexParseException(TEXT("The expression contained an invalid character range specifier"));
-				break;
+            case regex_constants::error_range:
+                ThrowRegexParseException(TEXT("The expression contained an invalid character range specifier"));
+                break;
 
-			case regex_constants::error_space:
-				ThrowRegexParseException(TEXT("Parsing a regular expression failed because there were not enough resources available"));
-				break;
+            case regex_constants::error_space:
+                ThrowRegexParseException(TEXT("Parsing a regular expression failed because there were not enough resources available"));
+                break;
 
-			case regex_constants::error_stack:
-				ThrowRegexParseException(TEXT("An attempted match failed because there was not enough memory available"));
-				break;
+            case regex_constants::error_stack:
+                ThrowRegexParseException(TEXT("An attempted match failed because there was not enough memory available"));
+                break;
 
-			case regex_constants::error_backref:
-				ThrowRegexParseException(TEXT("The expression contained an invalid back reference"));
-				break;
+            case regex_constants::error_backref:
+                ThrowRegexParseException(TEXT("The expression contained an invalid back reference"));
+                break;
 
             default:                                
                 ThrowRegexParseException(TEXT("Parse failed"));							
-				break;
-			}
-		}
+                break;
+            }
+        }
 
-		ThrowRegexParseException(TEXT("Parse failed"));							
-		return NULL; 
+        ThrowRegexParseException(TEXT("Parse failed"));							
+        return NULL; 
 
     }
     static void ThrowRegexParseException(const TCHAR* pszDetails) 
