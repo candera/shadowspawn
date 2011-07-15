@@ -43,14 +43,9 @@ bool s_cancel = false;
 void CalculateSourcePath(LPCTSTR wszSnapshotDevice, LPCTSTR wszBackupSource, LPCTSTR wszMountPoint, CString& output);
 void Cleanup(bool bAbnormalAbort, bool bSnapshotcreated, CComPtr<IVssBackupComponents> pBackupComponents, GUID snapshotSetId);
 bool Confirm(LPCTSTR message); 
-void CopyRecursive(LPCTSTR wszSource, LPCTSTR wszDestination, bool skipDenied, CCopyFilter& filter);
 BOOL WINAPI CtrlHandler(DWORD dwCtrlType); 
-void DeleteRecursive(LPCTSTR target); 
-void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive);
 bool ShouldAddComponent(CWriterComponent& component);
 LPCSTR WideToNarrow(LPCWSTR wsz);
-bool ShouldProcess(const CString& path);
-bool ShouldProcess(const CString& directory, const CString& name);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -113,44 +108,6 @@ int _tmain(int argc, _TCHAR* argv[])
             options.get_Source(), 
             options.get_Destination()); 
         OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
-
-        if (options.get_ClearDestination())
-        {
-            if (!Utilities::DirectoryExists(options.get_Destination()))
-            {
-                CString message; 
-                message.AppendFormat(TEXT("Skipping recursive delete of destination directory %s because it appears not to exist."), 
-                    options.get_Destination()); 
-                OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
-            }
-            else
-            {
-                CString message; 
-                message.AppendFormat(TEXT("Recursively deleting destination directory %s."), 
-                    options.get_Destination()); 
-                OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
-
-                bool doDelete = options.get_AcceptAll(); 
-
-                if (!doDelete)
-                {
-                    if (Confirm(message))
-                    {
-                        doDelete = true; 
-                    }
-                    else
-                    {
-                        OutputWriter::WriteLine(TEXT("Aborting backup."), VERBOSITY_THRESHOLD_NORMAL); 
-                        return 3; 
-                    }
-                }
-
-                if (doDelete)
-                {
-                    DeleteRecursive(options.get_Destination()); 
-                }
-            }
-        }
 
         OutputWriter::WriteLine(TEXT("Calling CreateVssBackupComponents")); 
         CHECK_HRESULT(::CreateVssBackupComponents(&pBackupComponents)); 
@@ -454,34 +411,8 @@ int _tmain(int argc, _TCHAR* argv[])
                 wszSource
                 );
 
-            message.Empty(); 
-            message.AppendFormat(TEXT("Recursively creating destination directory %s."), 
-                options.get_Destination()); 
-            OutputWriter::WriteLine(message); 
-
-            Utilities::CreateDirectory(options.get_Destination()); 
-
-            OutputWriter::WriteLine(TEXT("Calling CopyRecursive")); 
-
-            vector<CCopyFilter*> filters; 
-
-            filters.push_back(new CIncludeAllCopyFilter()); 
-
-			filters.push_back(new CFilespecCopyFilter(options.get_Filespecs())); 
-
-            CCopyAction copyAction(wszSource, options.get_Destination(), options.get_SkipDenied(), filters); 
-            ProcessDirectory(wszSource, copyAction, TEXT(""), options.get_Recursive()); 
-
-            for (unsigned int iFilter = 0; iFilter < filters.size(); ++iFilter)
-            {
-                delete filters[iFilter]; 
-            }
-
-            fileCount = copyAction.get_FileCount(); 
-            directoryCount = copyAction.get_DirectoryCount();
-            skipCount = copyAction.get_SkipCount(); 
-            byteCount = copyAction.get_ByteCount(); 
-
+            OutputWriter::WriteLine(TEXT("Run external copy program here.")); 
+			
             OutputWriter::WriteLine(TEXT("Calling BackupComplete")); 
             CComPtr<IVssAsync> pBackupCompleteResults; 
             CHECK_HRESULT(pBackupComponents->BackupComplete(&pBackupCompleteResults)); 
@@ -638,119 +569,6 @@ BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
     return TRUE; 
 
 }
-void DeleteRecursive(LPCTSTR target)
-{
-    if (!Utilities::DirectoryExists(target))
-    {
-        CString message; 
-        message.Format(TEXT("Cannot delete directory %s because it does not exist. Proceeding anyway."), 
-            target); 
-        OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
-        return; 
-    }
-
-    CDeleteAction deleteAction(target); 
-    ProcessDirectory(target, deleteAction, TEXT(""), true); 
-}
-void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directory, bool recursive)
-{
-    WIN32_FIND_DATA findData;
-    HANDLE hFindHandle;
-
-    CString srcdir;
-    Utilities::CombinePath(srcbase, directory, srcdir);
-
-	if (!ShouldProcess(srcdir)) 
-    {
-        return;
-    }
-
-    action.VisitDirectoryInitial(directory); 
-
-    CString pattern;
-    Utilities::CombinePath(srcdir, TEXT("*"), pattern);
-
-	Utilities::FixLongFilenames(pattern);
-
-    hFindHandle = ::FindFirstFile(pattern, &findData);
-    if (hFindHandle != INVALID_HANDLE_VALUE)
-    {
-		BOOL done = false;
-        while (!done)
-        {
-            if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
-            {
-                if (recursive)
-                {
-                    if (Utilities::AreEqual(findData.cFileName, L".") || Utilities::AreEqual(findData.cFileName, L".."))
-                    {
-                        // Do nothing
-                    }
-                    else
-                    {
-                        CString subdirectory;
-                        Utilities::CombinePath(directory, findData.cFileName, subdirectory);
-						if (!ShouldProcess(srcbase, subdirectory)) 
-                        {
-                            continue;
-                        }
-						ProcessDirectory(srcbase, action, subdirectory, recursive);
-                    }
-                }
-            }
-            else
-            {
-                CString file; 
-                Utilities::CombinePath(directory, findData.cFileName, file);
-				if (!ShouldProcess(srcbase, file)) continue;
-                action.VisitFile(file); 
-            }
-
-			BOOL worked = ::FindNextFile(hFindHandle, &findData);
-
-			if (!worked)
-			{
-				int error = GetLastError(); 
-
-				if (error == ERROR_NO_MORE_FILES)
-				{
-					done = true; 
-				}
-				else
-				{
-					CString errorMessage; 
-					Utilities::FormatErrorMessage(error, errorMessage); 
-					CString message; 
-					message.AppendFormat(TEXT("There was an error calling FindNextFile. Path: %s Error: %s"), 
-						pattern, errorMessage); 
-					throw new CShadowSpawnException(message.GetString()); 
-				}
-			}
-        } 
-    }
-	else 
-	{
-		int error = GetLastError(); 
-
-		if (error != ERROR_FILE_NOT_FOUND)
-		{
-            CString errorMessage; 
-            Utilities::FormatErrorMessage(error, errorMessage); 
-            CString message; 
-            message.AppendFormat(TEXT("There was an error calling FindFirstFile. Path: %s Error: %s"), 
-                pattern, errorMessage); 
-            throw new CShadowSpawnException(message.GetString()); 
-		}
-	}
-    ::FindClose(hFindHandle);
-
-
-    // Important to put this after FindClose, since otherwise there's still an 
-    // open handle to the directory, and that can interfere with (e.g.) directory
-    // deletion
-    action.VisitDirectoryFinal(directory); 
-
-}
 
 bool ShouldAddComponent(CWriterComponent& component)
 {
@@ -773,25 +591,3 @@ bool IsMatch(wregex* pattern, const CString& input)
 	return regex_match(input.GetString(), *pattern); 
 }
 
-bool ShouldProcess(wregex* ignorePattern, const CString& path) 
-{
-	if (!ignorePattern)
-    {
-        return true;
-    }
-	bool ignore = IsMatch(ignorePattern, path);
-	if (ignore)
-    {
-		CString message;
-		message.Format(TEXT("Ignoring %s"), path);
-		OutputWriter::WriteLine(message); 
-	}
-	return !ignore;
-}
-
-bool ShouldProcess(wregex* ignorePattern, const CString& directory, const CString& name) 
-{
-	CString fullPath;
-	Utilities::CombinePath(directory, name, fullPath);
-	return ShouldProcess(ignorePattern, fullPath);
-}

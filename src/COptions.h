@@ -121,10 +121,8 @@ public:
         options._clearDestination = false; 
         options._verbosityLevel = VERBOSITY_LEVEL_NORMAL; 
         options._acceptAll = false; 
-        options._skipDenied = false; 
         options._debug = false; 
         options._simulate = false; 
-        options._recursive = false; 
 
         if (argc < 3)
         {
@@ -148,17 +146,9 @@ public:
                 {
                     options._verbosityLevel = _ttoi(GetArgValue(arg)); 
                 }
-                else if (Utilities::StartsWith(arg, TEXT("ignorepattern=")))
-                {
-                    throw new CParseOptionsException(CString("The ignorepattern switch is no longer supported."));
-                }
                 else if (arg.Compare(TEXT("y")) == 0)
                 {
                     options._acceptAll = true; 
-                }
-                else if (arg.Compare(TEXT("skipdenied")) == 0)
-                {
-                    options._skipDenied = true; 
                 }
                 else if (arg.Compare(TEXT("debug")) == 0)
                 {
@@ -167,10 +157,6 @@ public:
                 else if (arg.Compare(TEXT("simulate")) == 0)
                 {
                     options._simulate = true; 
-                }
-                else if (arg.Compare(TEXT("recursive")) == 0 || arg.Compare(TEXT("r")) == 0)
-                {
-                    options._recursive = true; 
                 }
                 else
                 {
