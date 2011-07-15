@@ -31,7 +31,6 @@ using namespace std;
 class COptions
 {
 private: 
-    bool _clearDestination;
     bool _debug; 
     CString _destination; 
     vector<CString> _filespecs; 
@@ -43,10 +42,6 @@ public:
     VSS_BACKUP_TYPE get_BackupType()
     {
         return VSS_BACKUP_TYPE::VSS_BT_FULL; 
-    }
-    bool get_ClearDestination()
-    {
-        return _clearDestination; 
     }
     bool get_Debug(void)
     {
@@ -71,7 +66,7 @@ public:
     static LPCTSTR get_Usage(void)
     {
         return TEXT("Usage:\n\n")
-            TEXT("shadowspawn [/verbosity=LEVEL] [ /y ] [ /simulate ] <src> <drive:> <command>\n")
+            TEXT("shadowspawn [/verbosity=LEVEL] [ /simulate ] <src> <drive:> <command>\n")
             TEXT("\n")
             TEXT("Creates a shadow copy of <src>, mounts it at <drive:> and runs <command>.\n")
             TEXT("\n")
@@ -83,12 +78,6 @@ public:
             TEXT("               information will be emitted. 4 - Lots of diagnostic\n")
             TEXT("               information will be emitted. The default level is 2.\n")
             TEXT("\n")
-            TEXT("/y           - Instructs ShadowSpawn to proceed as if user answered yes\n")
-            TEXT("               to any confirmation prompts. Use with caution - in\n")
-            TEXT("               combination with the /clear switch, this switch will\n")
-            TEXT("               cause the destination directory to be deleted without\n")
-            TEXT("               confirmation.\n")
-            TEXT("\n")
             TEXT("/simulate    - Simulates running only - no snapshot is taken and command\n")
             TEXT("               is not executed.\n")
             TEXT("\n")
@@ -99,9 +88,6 @@ public:
 			TEXT("<command>    - A command to run. ShadowSpawn will ensure that <src> is\n")
 			TEXT("               mounted at <drive:> before starting <command>, and will\n")
 			TEXT("               wait for <command> to finish before unmounting <drive:>\n")
-			
-        //TEXT("\n")
-        //TEXT("\n")
         ; 
     }
     int get_VerbosityLevel(void)
@@ -131,11 +117,7 @@ public:
             {
                 arg = arg.Mid(1);
 
-				if (arg.Compare(TEXT("clear")) == 0)
-                {
-                    options._clearDestination = true; 
-                }
-                else if (Utilities::StartsWith(arg, TEXT("verbosity=")))
+				if (Utilities::StartsWith(arg, TEXT("verbosity=")))
                 {
                     options._verbosityLevel = _ttoi(GetArgValue(arg)); 
                 }
