@@ -406,7 +406,34 @@ int _tmain(int argc, _TCHAR* argv[])
                 );
 
             OutputWriter::WriteLine(TEXT("Run external copy program here.")); 
-			
+            
+            STARTUPINFO startUpInfo;
+            memset(&startUpInfo, 0, sizeof(startUpInfo));
+            startUpInfo.cb = sizeof(startUpInfo);
+
+            PROCESS_INFORMATION processInformation;
+            size_t commandArgLength = options.get_CommandArgs().size();
+            wchar_t* copyArgs = (wchar_t*)_alloca((commandArgLength+1)*sizeof(wchar_t));
+            options.get_CommandArgs().copy(copyArgs, commandArgLength);
+            copyArgs[commandArgLength] = L'\0';
+
+            bWorked = CreateProcess(options.get_Command().c_str(), copyArgs, NULL, NULL, FALSE, 0, NULL, 
+                                       NULL, &startUpInfo, &processInformation);
+            if (!bWorked)
+            {
+                DWORD error = ::GetLastError(); 
+                CString errorMessage; 
+                Utilities::FormatErrorMessage(error, errorMessage); 
+                CString message; 
+                message.AppendFormat(TEXT("There was an error calling CreateProcess. Process: %s Args: %s Error: %s"), 
+                    options.get_Command(), options.get_CommandArgs(), errorMessage); 
+                throw new CShadowSpawnException(message.GetString()); 
+            }
+
+            WaitForSingleObject(processInformation.hProcess, INFINITE);
+            CloseHandle(processInformation.hThread);
+            CloseHandle(processInformation.hProcess);
+
             OutputWriter::WriteLine(TEXT("Calling BackupComplete")); 
             CComPtr<IVssAsync> pBackupCompleteResults; 
             CHECK_HRESULT(pBackupComponents->BackupComplete(&pBackupCompleteResults)); 

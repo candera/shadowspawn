@@ -31,8 +31,8 @@ using namespace std;
 class COptions
 {
 private: 
-    string _command;
-    vector<string> _commandArgs; 
+    wstring _command;
+    wstring _commandArgs; 
     bool _debug; 
     CString _destination; 
     bool _simulate; 
@@ -44,6 +44,14 @@ public:
     {
         return VSS_BACKUP_TYPE::VSS_BT_FULL; 
     }
+    const wstring& get_Command(void)
+    {
+        return _command; 
+    }    
+    wstring& get_CommandArgs(void)
+    {
+        return _commandArgs; 
+    }
     bool get_Debug(void)
     {
         return _debug; 
@@ -51,10 +59,6 @@ public:
     LPCTSTR get_Destination(void)
     {
         return _destination.GetString(); 
-    }
-    vector<string>& get_commandArgs(void)
-    {
-        return _commandArgs; 
     }
     bool get_Simulate(void)
     {
@@ -146,11 +150,13 @@ public:
                 }
                 else if (options._command.empty())
                 {
-                    options._command.assign(Utilities::ConvertToMultibyteString(argv[i]));
+                    options._command.assign(argv[i]);
                 }
                 else
                 {
-                    options._commandArgs.push_back(Utilities::ConvertToMultibyteString(argv[i])); 
+                    options._commandArgs.append(argv[i]);
+                    options._commandArgs.append(TEXT(" "));
+
                 }
             }
         }
