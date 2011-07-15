@@ -31,9 +31,10 @@ using namespace std;
 class COptions
 {
 private: 
-    bool _debug; 
+    string _command;
+	vector<string> _commandArgs; 
+	bool _debug; 
     CString _destination; 
-    vector<CString> _filespecs; 
     bool _simulate; 
     CString _source; 
     int _verbosityLevel;
@@ -51,9 +52,9 @@ public:
     {
         return _destination.GetString(); 
     }
-    vector<CString>& get_Filespecs(void)
+    vector<string>& get_commandArgs(void)
     {
-        return _filespecs; 
+        return _commandArgs; 
     }
     bool get_Simulate(void)
     {
@@ -66,7 +67,7 @@ public:
     static LPCTSTR get_Usage(void)
     {
         return TEXT("Usage:\n\n")
-            TEXT("shadowspawn [/verbosity=LEVEL] [ /simulate ] <src> <drive:> <command>\n")
+            TEXT("shadowspawn [ /verbosity=LEVEL ] [ /simulate ] <src> <drive:> <command> [ <arg> ... ]\n")
             TEXT("\n")
             TEXT("Creates a shadow copy of <src>, mounts it at <drive:> and runs <command>.\n")
             TEXT("\n")
@@ -103,7 +104,7 @@ public:
         options._debug = false; 
         options._simulate = false; 
 
-        if (argc < 3)
+        if (argc < 4)
         {
             throw new CParseOptionsException(TEXT("Wrong number of arguments.")); 
         }
@@ -113,7 +114,7 @@ public:
             CString arg(argv[i]); 
             arg.MakeLower();
 
-            if (Utilities::StartsWith(arg, TEXT("/")) || Utilities::StartsWith(arg, TEXT("-")))
+            if (options._command.empty() && Utilities::StartsWith(arg, TEXT("/")) || Utilities::StartsWith(arg, TEXT("-")))
             {
                 arg = arg.Mid(1);
 
@@ -146,9 +147,13 @@ public:
                 {
                     options._destination = argv[i]; 
                 }
+				else if (options._command.empty())
+				{
+					options._command.assign(Utilities::ConvertToMultibyteString(argv[i]));
+				}
                 else
                 {
-                    options._filespecs.push_back(argv[i]); 
+                    options._commandArgs.push_back(Utilities::ConvertToMultibyteString(argv[i])); 
                 }
             }
         }

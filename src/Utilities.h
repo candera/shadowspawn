@@ -64,6 +64,7 @@ public:
     {
         CString s2(s); 
         LPSTR mbBuffer = new CHAR[s2.GetLength() + 1];
+        mbBuffer[s2.GetLength()] = 0;
 #ifdef _UNICODE
         int result = ::WideCharToMultiByte(CP_OEMCP, 0, s2, s2.GetLength(), mbBuffer, s2.GetLength(), NULL, NULL); 
 
