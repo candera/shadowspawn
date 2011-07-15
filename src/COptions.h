@@ -31,7 +31,6 @@ using namespace std;
 class COptions
 {
 private: 
-    bool _acceptAll; 
     bool _clearDestination;
     bool _debug; 
     CString _destination; 
@@ -41,10 +40,6 @@ private:
     int _verbosityLevel;
 
 public: 
-    bool get_AcceptAll()
-    {
-        return _acceptAll; 
-    }
     VSS_BACKUP_TYPE get_BackupType()
     {
         return VSS_BACKUP_TYPE::VSS_BT_FULL; 
@@ -118,9 +113,7 @@ public:
     {
         COptions options;
 
-        options._clearDestination = false; 
         options._verbosityLevel = VERBOSITY_LEVEL_NORMAL; 
-        options._acceptAll = false; 
         options._debug = false; 
         options._simulate = false; 
 
@@ -145,10 +138,6 @@ public:
                 else if (Utilities::StartsWith(arg, TEXT("verbosity=")))
                 {
                     options._verbosityLevel = _ttoi(GetArgValue(arg)); 
-                }
-                else if (arg.Compare(TEXT("y")) == 0)
-                {
-                    options._acceptAll = true; 
                 }
                 else if (arg.Compare(TEXT("debug")) == 0)
                 {
