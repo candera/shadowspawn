@@ -36,10 +36,7 @@ private:
     bool _debug; 
     CString _destination; 
     vector<CString> _filespecs; 
-    std::wregex* _ignorePattern;
-    bool _recursive; 
     bool _simulate; 
-    bool _skipDenied; 
     CString _source; 
     int _verbosityLevel;
 
@@ -68,21 +65,9 @@ public:
     {
         return _filespecs; 
     }
-    wregex* get_IgnorePattern(void)
-    {
-        return _ignorePattern;
-    }
-    bool get_Recursive(void)
-    {
-        return _recursive; 
-    }
     bool get_Simulate(void)
     {
         return _simulate; 
-    }
-    bool get_SkipDenied(void)
-    {
-        return _skipDenied; 
     }
     LPCTSTR get_Source(void)
     {
@@ -91,30 +76,17 @@ public:
     static LPCTSTR get_Usage(void)
     {
         return TEXT("Usage:\n\n")
-            TEXT("shadowspawn [/verbosity=LEVEL]\n")
-            TEXT("         [ /full | /incremental ] [ /clear ] [ /skipdenied ] [ /y ]\n")
-            TEXT("         [ /simulate ] [/recursive]\n")
-            TEXT("         <src> <dest> [<file> [<file> [ ... ] ]\n")
+            TEXT("shadowspawn [/verbosity=LEVEL] [ /y ] [ /simulate ] <src> <drive:> <command>\n")
             TEXT("\n")
-            TEXT("Recursively copies a directory tree from <src> to <dest>.\n")
+            TEXT("Creates a shadow copy of <src>, mounts it at <drive:> and runs <command>.\n")
             TEXT("\n")
             TEXT("/verbosity   - Specifies how much information ShadowSpawn will emit\n")
-            TEXT("               during copy. Legal values are: 0 - almost no\n")
+            TEXT("               during execution. Legal values are: 0 - almost no\n")
             TEXT("               information will be emitted. 1 - Only error information\n")
             TEXT("               will be emitted. 2 - Errors and warnings will be\n")
             TEXT("               emitted. 3 - Errors, warnings, and some status\n")
             TEXT("               information will be emitted. 4 - Lots of diagnostic\n")
             TEXT("               information will be emitted. The default level is 2.\n")
-            TEXT("\n")
-            TEXT("/clear       - Recursively delete the destination directory before\n")
-            TEXT("               copying. ShadowSpawn will ask for confirmation before\n")
-            TEXT("               deleting unless the /y switch is also specified.\n")
-            TEXT("\n")
-            TEXT("/skipdenied  - By default, if ShadowSpawn does not have sufficient\n")
-            TEXT("               privilege to copy a file, the copy will fail with an\n")
-            TEXT("               error. When the /skipdenied switch is specified,\n")
-            TEXT("               permission errors trying to copy a source file result\n")
-            TEXT("               in the file being skipped and the copy continuing.\n")
             TEXT("\n")
             TEXT("/y           - Instructs ShadowSpawn to proceed as if user answered yes\n")
             TEXT("               to any confirmation prompts. Use with caution - in\n")
@@ -122,16 +94,17 @@ public:
             TEXT("               cause the destination directory to be deleted without\n")
             TEXT("               confirmation.\n")
             TEXT("\n")
-            TEXT("/simulate    - Simulates copy only - no snapshot is taken and no copy\n")
-            TEXT("               is performed.\n")
+            TEXT("/simulate    - Simulates running only - no snapshot is taken and command\n")
+            TEXT("               is not executed.\n")
             TEXT("\n")
-            TEXT("/recursive   - Copies subdirectories (including empty ones). Shortcut: /r\n")
-            TEXT("\n")
-            TEXT("<src>        - The directory to copy (the source directory).\n")
-            TEXT("<dest>       - The directory to copy to (the destination directory).\n")
-            TEXT("<file>       - A file (e.g. foo.txt) or filespec (e.g. *.txt) to copy.\n")
-            TEXT("               Defaults to *.*.\n"); 
-
+            TEXT("<src>        - The directory to shadow copy (the source directory).\n")
+            TEXT("<drive:>     - Where to mount the shadow copy. Must be a single letter\n")
+			TEXT("               followed by a colon. E.g. 'X:'. The drive letter must be\n")
+			TEXT("               available (i.e. nothing else mounted there).\n")
+			TEXT("<command>    - A command to run. ShadowSpawn will ensure that <src> is\n")
+			TEXT("               mounted at <drive:> before starting <command>, and will\n")
+			TEXT("               wait for <command> to finish before unmounting <drive:>\n")
+			
         //TEXT("\n")
         //TEXT("\n")
         ; 
@@ -152,7 +125,6 @@ public:
         options._debug = false; 
         options._simulate = false; 
         options._recursive = false; 
-        options._ignorePattern = NULL;
 
         if (argc < 3)
         {
