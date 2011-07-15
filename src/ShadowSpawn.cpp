@@ -26,13 +26,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "CComException.h"
 #include "CShadowSpawnException.h"
 #include "COptions.h"
-#include "CDirectoryAction.h"
-#include "CCopyAction.h"
 #include "OutputWriter.h"
-#include "CIncludeAllCopyFilter.h"
-#include "CModifiedSinceCopyFilter.h"
-#include "CFilespecCopyFilter.h"
-#include "CDeleteAction.h"
 #include "CWriter.h"
 #include "CWriterComponent.h"
 

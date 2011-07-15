@@ -18,28 +18,7 @@
     <ClCompile Include="CComException.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CCopyAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CCopyFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CDeleteAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CDirectoryAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CFilespecCopyFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CShadowSpawnException.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CIncludeAllCopyFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CModifiedSinceCopyFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Console.cpp">
@@ -74,28 +53,7 @@
     <ClInclude Include="CComException.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CCopyAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CCopyFilter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CDeleteAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CDirectoryAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CFilespecCopyFilter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CShadowSpawnException.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CIncludeAllCopyFilter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CModifiedSinceCopyFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Console.h">

@@ -573,14 +573,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CComException.cpp" />
-    <ClCompile Include="CCopyAction.cpp" />
-    <ClCompile Include="CCopyFilter.cpp" />
-    <ClCompile Include="CDeleteAction.cpp" />
-    <ClCompile Include="CDirectoryAction.cpp" />
-    <ClCompile Include="CFilespecCopyFilter.cpp" />
     <ClCompile Include="CShadowSpawnException.cpp" />
-    <ClCompile Include="CIncludeAllCopyFilter.cpp" />
-    <ClCompile Include="CModifiedSinceCopyFilter.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="COptions.cpp" />
     <ClCompile Include="CParseOptionsException.cpp" />
@@ -606,14 +599,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CComException.h" />
-    <ClInclude Include="CCopyAction.h" />
-    <ClInclude Include="CCopyFilter.h" />
-    <ClInclude Include="CDeleteAction.h" />
-    <ClInclude Include="CDirectoryAction.h" />
-    <ClInclude Include="CFilespecCopyFilter.h" />
     <ClInclude Include="CShadowSpawnException.h" />
-    <ClInclude Include="CIncludeAllCopyFilter.h" />
-    <ClInclude Include="CModifiedSinceCopyFilter.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="COptions.h" />
     <ClInclude Include="CParseOptionsException.h" />
