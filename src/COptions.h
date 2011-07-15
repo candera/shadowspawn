@@ -21,6 +21,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <assert.h>
 #include "CShadowSpawnException.h"
 #include "CParseOptionsException.h"
 #include "Utilities.h"
@@ -32,7 +33,6 @@ class COptions
 {
 private: 
     wstring _command;
-    wstring _commandArgs; 
     bool _debug; 
     CString _destination; 
     bool _simulate; 
@@ -48,10 +48,6 @@ public:
     {
         return _command; 
     }    
-    wstring& get_CommandArgs(void)
-    {
-        return _commandArgs; 
-    }
     bool get_Debug(void)
     {
         return _debug; 
@@ -100,19 +96,17 @@ public:
     static COptions Parse(int argc, _TCHAR* argv[])
     {
         COptions options;
-
+        
         options._verbosityLevel = VERBOSITY_LEVEL_NORMAL; 
         options._debug = false; 
         options._simulate = false; 
 
-        if (argc < 4)
+        vector<wstring> tokens;
+        COptions::RawParse(tokens);
+        
+        for (int i = 1; i < tokens.size(); ++i)
         {
-            throw new CParseOptionsException(TEXT("Wrong number of arguments.")); 
-        }
-
-        for (int i = 1; i < argc; ++i)
-        {
-            CString arg(argv[i]); 
+            CString arg(tokens[i].c_str()); 
             arg.MakeLower();
 
             if (options._command.empty() && Utilities::StartsWith(arg, TEXT("/")) || Utilities::StartsWith(arg, TEXT("-")))
@@ -133,6 +127,7 @@ public:
                 }
                 else
                 {
+                    assert(false);
                     CString message("Unrecognized switch: "); 
                     message.Append(arg); 
                     throw new CParseOptionsException(message); 
@@ -142,21 +137,16 @@ public:
             {
                 if (options._source.IsEmpty())
                 {
-                    options._source = argv[i]; 
+                    options._source = tokens[i].c_str(); 
                 }
                 else if (options._destination.IsEmpty())
                 {
-                    options._destination = argv[i]; 
-                }
-                else if (options._command.empty())
-                {
-                    options._command.assign(argv[i]);
+                    options._destination = tokens[i].c_str(); 
                 }
                 else
                 {
-                    options._commandArgs.append(argv[i]);
-                    options._commandArgs.append(TEXT(" "));
-
+                    options._command.append(tokens[i].c_str());
+                    options._command.append(TEXT(" "));
                 }
             }
         }
@@ -164,6 +154,11 @@ public:
         // Normalize paths to full paths
         options._source = NormalizePath(options._source); 
         options._destination = NormalizePath(options._destination); 
+
+        if (options._source.IsEmpty() || options._destination.IsEmpty() || options._command.empty())
+        {
+            throw new CParseOptionsException(TEXT("Missing required arguments.")); 
+        }
 
         return options; 
     }
@@ -212,7 +207,6 @@ private:
             }
         }
     }
-
     static LPCTSTR NullIfEmpty(CString& string)
     {
         if (string.GetLength() == 0)
@@ -296,6 +290,49 @@ private:
         ThrowRegexParseException(TEXT("Parse failed"));							
         return NULL; 
 
+    }
+    static void RawParse(vector<wstring>& tokens)
+    {
+        wchar_t* lp = GetCommandLineW();
+        while (*lp != L'\0')
+        {
+            if (*lp == L'\"')
+            {
+                wstring token;
+                token.assign(1, L'\"');
+                lp++;
+                while (*lp != L'\"' && *lp != L'\0')
+                {
+                    token.append(1, *lp);
+                    lp++;
+                }
+                lp++;
+                token.append(1, L'\"');
+                tokens.push_back(token);
+            }
+            else if (*lp == L' ')
+            {
+                wstring token;
+                while (*lp == L' ') lp++;
+                while (*lp != L' ' && *lp != L'\0')
+                {
+                    token.append(1, *lp);
+                    lp++;
+                }
+                if (!token.empty()) tokens.push_back(token);
+            }
+            else  // start of command line when outside of debugger
+            {
+                wstring token;
+                assert(tokens.empty());
+                while (*lp != L' ' && *lp != L'\0')
+                {
+                    token.append(1, *lp);
+                    lp++;
+                }
+                if (!token.empty()) tokens.push_back(token);
+            }
+        }
     }
     static void ThrowRegexParseException(const TCHAR* pszDetails) 
     {
