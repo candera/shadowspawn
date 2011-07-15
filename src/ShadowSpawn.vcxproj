@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug-W2K3|Win32">
@@ -52,7 +52,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FC0AD7E3-91E2-4232-8289-E1DC8F9395C6}</ProjectGuid>
-    <RootNamespace>HoboCopy</RootNamespace>
+    <RootNamespace>ShadowSpawn</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -241,7 +241,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\data\backup\HoboCopy\inc\winxp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\data\backup\ShadowSpawn\inc\winxp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -252,7 +252,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>vss_uuid.lib;vssapi.lib;msxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\data\backup\HoboCopy\lib\winxp\obj\i386;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\data\backup\ShadowSpawn\lib\winxp\obj\i386;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -579,7 +579,7 @@
     <ClCompile Include="CDeleteAction.cpp" />
     <ClCompile Include="CDirectoryAction.cpp" />
     <ClCompile Include="CFilespecCopyFilter.cpp" />
-    <ClCompile Include="CHoboCopyException.cpp" />
+    <ClCompile Include="CShadowSpawnException.cpp" />
     <ClCompile Include="CIncludeAllCopyFilter.cpp" />
     <ClCompile Include="CModifiedSinceCopyFilter.cpp" />
     <ClCompile Include="Console.cpp" />
@@ -587,7 +587,7 @@
     <ClCompile Include="CParseOptionsException.cpp" />
     <ClCompile Include="CWriter.cpp" />
     <ClCompile Include="CWriterComponent.cpp" />
-    <ClCompile Include="HoboCopy.cpp" />
+    <ClCompile Include="ShadowSpawn.cpp" />
     <ClCompile Include="OutputWriter.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-W2K3|Win32'">Create</PrecompiledHeader>
@@ -613,7 +613,7 @@
     <ClInclude Include="CDeleteAction.h" />
     <ClInclude Include="CDirectoryAction.h" />
     <ClInclude Include="CFilespecCopyFilter.h" />
-    <ClInclude Include="CHoboCopyException.h" />
+    <ClInclude Include="CShadowSpawnException.h" />
     <ClInclude Include="CIncludeAllCopyFilter.h" />
     <ClInclude Include="CModifiedSinceCopyFilter.h" />
     <ClInclude Include="Console.h" />

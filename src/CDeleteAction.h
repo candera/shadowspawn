@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -53,7 +53,7 @@ public:
             Utilities::FormatErrorMessage(error, errorMessage); 
             CString message; 
             message.AppendFormat(TEXT("Error %s calling RemoveDirectory on %s"), errorMessage, fullPath); 
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
         else
         {
@@ -95,7 +95,7 @@ public:
                 {
                     CString message;
                     message.AppendFormat(TEXT("Failed to retrieve attributes for file %s."), fullPath); 
-                    throw new CHoboCopyException(message); 
+                    throw new CShadowSpawnException(message); 
                 }
 
                 attributes &= ~FILE_ATTRIBUTE_READONLY; 
@@ -106,7 +106,7 @@ public:
                 {
                     CString message;
                     message.AppendFormat(TEXT("Failed to clear read-only bit on %s"), fullPath); 
-                    throw new CHoboCopyException(message); 
+                    throw new CShadowSpawnException(message); 
                 }
 
                 bWorked = ::DeleteFile(fullPath); 
@@ -122,7 +122,7 @@ public:
                 Utilities::FormatErrorMessage(error, errorMessage); 
                 CString message; 
                 message.AppendFormat(TEXT("Error %s calling DeleteFile on %s"), errorMessage, path); 
-                throw new CHoboCopyException(message); 
+                throw new CShadowSpawnException(message); 
             }
         }
 

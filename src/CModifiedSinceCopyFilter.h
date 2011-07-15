@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -45,7 +45,7 @@ public:
             Utilities::FormatErrorMessage(error, errorMessage); 
             CString message; 
             message.AppendFormat(TEXT("SystemTimeToFileTime failed with error %s"), errorMessage); 
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
     }
 
@@ -78,7 +78,7 @@ public:
             Utilities::FormatErrorMessage(error, errorMessage); 
             CString message; 
             message.AppendFormat(TEXT("Unable to open file %s exists. Error %s."), path, errorMessage);
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
 
         FILETIME modified; 
@@ -99,7 +99,7 @@ public:
             CString message; 
             message.AppendFormat(TEXT("Unable to retrieve file time from file %s. Error %s."), path, errorMessage); 
             ::CloseHandle(hFile); 
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
 
         ::CloseHandle(hFile); 

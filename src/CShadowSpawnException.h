@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -23,13 +23,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
-class CHoboCopyException
+class CShadowSpawnException
 {
 private:
     CString _message;
 
 public: 
-    CHoboCopyException::CHoboCopyException(LPCTSTR message)
+    CShadowSpawnException::CShadowSpawnException(LPCTSTR message)
     {
         _message.Append(message); 
     }

@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -26,7 +26,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "CCopyFilter.h"
 #include "CDirectoryAction.h"
 #include "OutputWriter.h"
-#include "CHoboCopyException.h"
+#include "CShadowSpawnException.h"
 
 class CCopyAction : public CDirectoryAction
 {
@@ -119,7 +119,7 @@ public:
                     CString message; 
                     message.AppendFormat(TEXT("Copy of file failed with error %s on file %s"), 
                         errorMessage, sourceFile); 
-                    throw new CHoboCopyException(message);
+                    throw new CShadowSpawnException(message);
                 }
             }
             else
@@ -133,7 +133,7 @@ public:
                 {
                     _byteCount += Utilities::GetFileSize(sourceFile); 
                 }
-                catch (CHoboCopyException* x)
+                catch (CShadowSpawnException* x)
                 {
                     CString message; 
                     message.AppendFormat(TEXT("Unable to calculate size of file. Size calculations may be incorrect. Message was: %s"), 

@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -25,7 +25,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace std; 
 
-#include "CHoboCopyException.h"
+#include "CShadowSpawnException.h"
 
 class Utilities
 {
@@ -123,7 +123,7 @@ public:
                     FormatErrorMessage(error, errorMessage); 
                     CString message;
                     message.AppendFormat(TEXT("Failure creating directory %s (as %s) - %s"), pathToCreate, fixedPath, errorMessage); 
-                    throw new CHoboCopyException(message); 
+                    throw new CShadowSpawnException(message); 
                 }
             }
         }
@@ -150,7 +150,7 @@ public:
             CString message; 
             message.AppendFormat(TEXT("Unable to determine if directory %s (as %s) exists. Error was %s."), 
                 directory, fixedPath, errorMessage);
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
 
         if ((attributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
@@ -213,7 +213,7 @@ public:
                 CString message; 
                 message.AppendFormat(TEXT("Unable to convert UTC time to local time. Error was %s."), 
                     errorMessage); 
-                throw new CHoboCopyException(message); 
+                throw new CShadowSpawnException(message); 
             }
         }
         else
@@ -321,7 +321,7 @@ public:
             CString message; 
             message.AppendFormat(TEXT("Unable to open file %s to retrieve file size. Error was %s."), 
                 path, errorMessage);
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
 
         LARGE_INTEGER size; 
@@ -338,7 +338,7 @@ public:
             CString message; 
             message.AppendFormat(TEXT("Unable to retrieve file size for file %s. Error was %s."), 
                 path, errorMessage);
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
 
         ::CloseHandle(hFile); 
@@ -395,7 +395,7 @@ public:
         {
             CString message; 
             message.AppendFormat(TEXT("The pattern %s is illegal: only a single wildcard is supported."), pattern); 
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
 
         // No wildcard is present

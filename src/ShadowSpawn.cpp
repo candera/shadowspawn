@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -24,7 +24,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "stdafx.h"
 #include "CComException.h"
-#include "CHoboCopyException.h"
+#include "CShadowSpawnException.h"
 #include "COptions.h"
 #include "CDirectoryAction.h"
 #include "CCopyAction.h"
@@ -58,7 +58,7 @@ int _tmain(int argc, _TCHAR* argv[])
     //::DebugBreak(); 
 
     OutputWriter::SetVerbosityLevel(VERBOSITY_LEVEL_NORMAL); 
-    OutputWriter::WriteLine(TEXT("HoboCopy (c) 2011 Wangdera Corporation. hobocopy@wangdera.com"), 
+    OutputWriter::WriteLine(TEXT("ShadowSpawn (c) 2011 Wangdera Corporation. shadowspawn@wangdera.com"), 
         VERBOSITY_THRESHOLD_UNLESS_SILENT); 
     OutputWriter::WriteLine(TEXT(""), VERBOSITY_THRESHOLD_UNLESS_SILENT); 
 
@@ -194,7 +194,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
         if (hrGatherStatus == VSS_S_ASYNC_CANCELLED)
         {
-            throw new CHoboCopyException(L"GatherWriterMetadata was cancelled."); 
+            throw new CShadowSpawnException(L"GatherWriterMetadata was cancelled."); 
         }
 
 		OutputWriter::WriteLine(TEXT("Call to GatherWriterMetadata finished.")); 
@@ -353,7 +353,7 @@ int _tmain(int argc, _TCHAR* argv[])
             CString message; 
             message.AppendFormat(TEXT("There was an error retrieving the volume name from the path. Path: %s Error: %s"), 
                 options.get_Source(), errorMessage); 
-            throw new CHoboCopyException(message.GetString()); 
+            throw new CShadowSpawnException(message.GetString()); 
         }
 
         OutputWriter::WriteLine(TEXT("Calling AddToSnapshotSet")); 
@@ -412,7 +412,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
         if (hrPrepareForBackupResults != VSS_S_ASYNC_FINISHED)
         {
-            throw new CHoboCopyException(TEXT("Prepare for backup failed.")); 
+            throw new CShadowSpawnException(TEXT("Prepare for backup failed.")); 
         }
 
         OutputWriter::WriteLine(TEXT("Call to PrepareForBackup finished.")); 
@@ -442,7 +442,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
             if (s_cancel)
             {
-                throw new CHoboCopyException(TEXT("Processing was cancelled by control-c, control-break, or a shutdown event. Terminating.")); 
+                throw new CShadowSpawnException(TEXT("Processing was cancelled by control-c, control-break, or a shutdown event. Terminating.")); 
             }
 
             bWorked = ::SetConsoleCtrlHandler(CtrlHandler, FALSE); 
@@ -457,7 +457,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
             if (hrDoSnapshotSetResults != VSS_S_ASYNC_FINISHED)
             {
-                throw new CHoboCopyException(L"DoSnapshotSet failed."); 
+                throw new CShadowSpawnException(L"DoSnapshotSet failed."); 
             }
 
 	        OutputWriter::WriteLine(TEXT("Call to DoSnapshotSet finished.")); 
@@ -523,7 +523,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
             if (hrBackupCompleteResults != VSS_S_ASYNC_FINISHED)
             {
-                throw new CHoboCopyException(TEXT("Completion of backup failed.")); 
+                throw new CShadowSpawnException(TEXT("Completion of backup failed.")); 
             }
 
             OutputWriter::WriteLine(TEXT("Call to BackupComplete finished.")); 
@@ -546,7 +546,7 @@ int _tmain(int argc, _TCHAR* argv[])
                 }
                 else
                 {
-                    throw new CHoboCopyException(TEXT("Unsupported backup type.")); 
+                    throw new CShadowSpawnException(TEXT("Unsupported backup type.")); 
                 }
 
                 backupState.Save(options.get_StateFile(), bstrBackupDocument); 
@@ -564,7 +564,7 @@ int _tmain(int argc, _TCHAR* argv[])
         OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_UNLESS_SILENT); 
         return 1; 
     }
-    catch (CHoboCopyException* e)
+    catch (CShadowSpawnException* e)
     {
         Cleanup(bAbnormalAbort, bSnapshotCreated, pBackupComponents, snapshotSetId);
         OutputWriter::WriteLine(e->get_Message(), VERBOSITY_THRESHOLD_UNLESS_SILENT); 
@@ -774,7 +774,7 @@ void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directo
 					CString message; 
 					message.AppendFormat(TEXT("There was an error calling FindNextFile. Path: %s Error: %s"), 
 						pattern, errorMessage); 
-					throw new CHoboCopyException(message.GetString()); 
+					throw new CShadowSpawnException(message.GetString()); 
 				}
 			}
         } 
@@ -790,7 +790,7 @@ void ProcessDirectory(LPCTSTR srcbase, CDirectoryAction& action, LPCTSTR directo
             CString message; 
             message.AppendFormat(TEXT("There was an error calling FindFirstFile. Path: %s Error: %s"), 
                 pattern, errorMessage); 
-            throw new CHoboCopyException(message.GetString()); 
+            throw new CShadowSpawnException(message.GetString()); 
 		}
 	}
     ::FindClose(hFindHandle);

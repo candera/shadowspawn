@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -168,10 +168,10 @@ public:
             CString reason(bstrReason); 
             CString message; 
             message.AppendFormat(TEXT("Failed to load state file from %s. Reason: %s."), path, (LPCTSTR) reason); 
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
 
-        _hasLastFullBackup = SelectDateTimeValue(stateDocument, TEXT("/hoboCopyState/@lastFullBackup"), &_lastFullBackup); 
+        _hasLastFullBackup = SelectDateTimeValue(stateDocument, TEXT("/shadowSpawnState/@lastFullBackup"), &_lastFullBackup); 
 
         if (_hasLastFullBackup)
         {
@@ -186,7 +186,7 @@ public:
             OutputWriter::WriteLine(TEXT("Backup file did not have last full backup time recorded.")); 
         }
 
-        _hasLastIncrementalBackup = SelectDateTimeValue(stateDocument, TEXT("/hoboCopyState/@lastIncrementalBackup"), &_lastIncrementalBackup); 
+        _hasLastIncrementalBackup = SelectDateTimeValue(stateDocument, TEXT("/shadowSpawnState/@lastIncrementalBackup"), &_lastIncrementalBackup); 
 
         if (_hasLastIncrementalBackup)
         {
@@ -206,7 +206,7 @@ public:
     {
         if (!_hasLastFullBackup)
         {
-            throw new CHoboCopyException(TEXT("Could not locate last full backup time.")); 
+            throw new CShadowSpawnException(TEXT("Could not locate last full backup time.")); 
         }
 
         CString message; 
@@ -233,7 +233,7 @@ public:
         {
             CString message; 
             message.Format(TEXT("loadXML failed with HRESULT 0x%x"), hr); 
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
         else if (hr == S_FALSE)
         {
@@ -245,17 +245,17 @@ public:
             CHECK_HRESULT(parseError->get_reason(&bstrReason));
             CString message; 
             message.Format(TEXT("loadXML failed to parse: %s"), bstrReason); 
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
 
         if (worked == VARIANT_FALSE)
         {
-            throw new CHoboCopyException(TEXT("IXMLDOMDocument::loadXML() failed")); 
+            throw new CShadowSpawnException(TEXT("IXMLDOMDocument::loadXML() failed")); 
         }
 
         OutputWriter::WriteLine(TEXT("Creating state element.")); 
         CComPtr<IXMLDOMElement> pStateElement; 
-        CHECK_HRESULT(backupDocumentDom->createElement(CComBSTR(TEXT("hoboCopyState")), 
+        CHECK_HRESULT(backupDocumentDom->createElement(CComBSTR(TEXT("shadowSpawnState")), 
             &pStateElement)); 
 
         if (_hasLastFullBackup)

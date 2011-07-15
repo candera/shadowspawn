@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -76,7 +76,7 @@ using namespace std;
 
 #define CHECK_HRESULT(x) { HRESULT ckhr = ((x)); if (ckhr != S_OK) throw new CComException(ckhr, __FILE__, __LINE__); }
 
-//#include "CHoboCopyException.h"
+//#include "CShadowSpawnException.h"
 //#include "Utilities.h"
 //#include "Console.h"
 //#include "OutputWriter.h"

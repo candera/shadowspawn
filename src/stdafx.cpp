@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -22,7 +22,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 // stdafx.cpp : source file that includes just the standard includes
-// HoboCopy.pch will be the pre-compiled header
+// ShadowSpawn.pch will be the pre-compiled header
 // stdafx.obj will contain the pre-compiled type information
 
 #include "stdafx.h"

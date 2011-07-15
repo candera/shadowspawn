@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -21,7 +21,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "CHoboCopyException.h"
+#include "CShadowSpawnException.h"
 #include "CParseOptionsException.h"
 #include "Utilities.h"
 #include "OutputWriter.h"
@@ -97,7 +97,7 @@ public:
     static LPCTSTR get_Usage(void)
     {
         return TEXT("Usage:\n\n")
-            TEXT("hobocopy [/statefile=FILE] [/verbosity=LEVEL]\n")
+            TEXT("shadowspawn [/statefile=FILE] [/verbosity=LEVEL]\n")
             TEXT("         [ /full | /incremental ] [ /clear ] [ /skipdenied ] [ /y ]\n")
             TEXT("         [ /simulate ] [/recursive]\n")
             TEXT("         <src> <dest> [<file> [<file> [ ... ] ]\n")
@@ -110,7 +110,7 @@ public:
             TEXT("               read from this file to determine which files should be\n")
             TEXT("               copied.\n")
             TEXT("\n")
-            TEXT("/verbosity   - Specifies how much information HoboCopy will emit\n")
+            TEXT("/verbosity   - Specifies how much information ShadowSpawn will emit\n")
             TEXT("               during copy. Legal values are: 0 - almost no\n")
             TEXT("               information will be emitted. 1 - Only error information\n")
             TEXT("               will be emitted. 2 - Errors and warnings will be\n")
@@ -128,16 +128,16 @@ public:
             TEXT("               full copy is read from.\n")
             TEXT("\n")
             TEXT("/clear       - Recursively delete the destination directory before\n")
-            TEXT("               copying. HoboCopy will ask for confirmation before\n")
+            TEXT("               copying. ShadowSpawn will ask for confirmation before\n")
             TEXT("               deleting unless the /y switch is also specified.\n")
             TEXT("\n")
-            TEXT("/skipdenied  - By default, if HoboCopy does not have sufficient\n")
+            TEXT("/skipdenied  - By default, if ShadowSpawn does not have sufficient\n")
             TEXT("               privilege to copy a file, the copy will fail with an\n")
             TEXT("               error. When the /skipdenied switch is specified,\n")
             TEXT("               permission errors trying to copy a source file result\n")
             TEXT("               in the file being skipped and the copy continuing.\n")
             TEXT("\n")
-            TEXT("/y           - Instructs HoboCopy to proceed as if user answered yes\n")
+            TEXT("/y           - Instructs ShadowSpawn to proceed as if user answered yes\n")
             TEXT("               to any confirmation prompts. Use with caution - in\n")
             TEXT("               combination with the /clear switch, this switch will\n")
             TEXT("               cause the destination directory to be deleted without\n")
@@ -301,7 +301,7 @@ private:
                 Utilities::FormatErrorMessage(error, errorMessage); 
                 CString message; 
                 message.AppendFormat(TEXT("Error calling GetFullPathName: %s"), errorMessage); 
-                throw new CHoboCopyException(message.GetString()); 
+                throw new CShadowSpawnException(message.GetString()); 
             }
             else if (result > MAX_PATH)
             {

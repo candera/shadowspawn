@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (hobocopy@wangdera.com)
+Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -69,12 +69,12 @@ public:
             Utilities::FormatErrorMessage(error, errorMessage); 
             CString message; 
             message.AppendFormat(TEXT("There was an error calling ReadConsole. Error %s"), errorMessage); 
-            throw new CHoboCopyException(message); 
+            throw new CShadowSpawnException(message); 
         }
 
         if (charsRead != 1)
         {
-            throw new CHoboCopyException(TEXT("ReadConsole was unable to read a character.")); 
+            throw new CShadowSpawnException(TEXT("ReadConsole was unable to read a character.")); 
         }
 
         return buffer[0]; 
@@ -98,7 +98,7 @@ public:
             Utilities::FormatErrorMessage(error, errorMessage); 
             CString message; 
             message.AppendFormat(TEXT("Unable to write to the console. %s."), errorMessage); 
-            throw new CHoboCopyException(message);             
+            throw new CShadowSpawnException(message);             
         }
     }
 
