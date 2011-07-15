@@ -67,7 +67,7 @@ public:
     static LPCTSTR get_Usage(void)
     {
         return TEXT("Usage:\n\n")
-            TEXT("shadowspawn [ /verbosity=LEVEL ] [ /simulate ] <src> <drive:> <command> [ <arg> ... ]\n")
+            TEXT("shadowspawn [ /verbosity=LEVEL ] <src> <drive:> <command> [ <arg> ... ]\n")
             TEXT("\n")
             TEXT("Creates a shadow copy of <src>, mounts it at <drive:> and runs <command>.\n")
             TEXT("\n")
@@ -78,9 +78,6 @@ public:
             TEXT("               emitted. 3 - Errors, warnings, and some status\n")
             TEXT("               information will be emitted. 4 - Lots of diagnostic\n")
             TEXT("               information will be emitted. The default level is 2.\n")
-            TEXT("\n")
-            TEXT("/simulate    - Simulates running only - no snapshot is taken and command\n")
-            TEXT("               is not executed.\n")
             TEXT("\n")
             TEXT("<src>        - The directory to shadow copy (the source directory).\n")
             TEXT("<drive:>     - Where to mount the shadow copy. Must be a single letter\n")
