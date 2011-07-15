@@ -32,7 +32,6 @@ class COptions
 {
 private: 
     bool _acceptAll; 
-    VSS_BACKUP_TYPE _backupType; 
     bool _clearDestination;
     bool _debug; 
     CString _destination; 
@@ -42,7 +41,6 @@ private:
     bool _simulate; 
     bool _skipDenied; 
     CString _source; 
-    CString _stateFile; 
     int _verbosityLevel;
 
 public: 
@@ -52,7 +50,7 @@ public:
     }
     VSS_BACKUP_TYPE get_BackupType()
     {
-        return _backupType; 
+        return VSS_BACKUP_TYPE::VSS_BT_FULL; 
     }
     bool get_ClearDestination()
     {
@@ -86,10 +84,6 @@ public:
     {
         return _skipDenied; 
     }
-    LPCTSTR get_StateFile()
-    {
-        return NullIfEmpty(_stateFile); 
-    }
     LPCTSTR get_Source(void)
     {
         return _source.GetString(); 
@@ -97,18 +91,12 @@ public:
     static LPCTSTR get_Usage(void)
     {
         return TEXT("Usage:\n\n")
-            TEXT("shadowspawn [/statefile=FILE] [/verbosity=LEVEL]\n")
+            TEXT("shadowspawn [/verbosity=LEVEL]\n")
             TEXT("         [ /full | /incremental ] [ /clear ] [ /skipdenied ] [ /y ]\n")
             TEXT("         [ /simulate ] [/recursive]\n")
             TEXT("         <src> <dest> [<file> [<file> [ ... ] ]\n")
             TEXT("\n")
             TEXT("Recursively copies a directory tree from <src> to <dest>.\n")
-            TEXT("\n")
-            TEXT("/statefile   - Specifies a file where information about the copy will\n")
-            TEXT("               be written. This argument is required when /incremental\n")
-            TEXT("               is specified, as the date and time of the last copy is\n")
-            TEXT("               read from this file to determine which files should be\n")
-            TEXT("               copied.\n")
             TEXT("\n")
             TEXT("/verbosity   - Specifies how much information ShadowSpawn will emit\n")
             TEXT("               during copy. Legal values are: 0 - almost no\n")
@@ -117,15 +105,6 @@ public:
             TEXT("               emitted. 3 - Errors, warnings, and some status\n")
             TEXT("               information will be emitted. 4 - Lots of diagnostic\n")
             TEXT("               information will be emitted. The default level is 2.\n")
-            TEXT("\n")
-            TEXT("/full        - Perform a full copy. All files will be copied\n")
-            TEXT("               regardless of modification date.\n")
-            TEXT("\n")
-            TEXT("/incremental - Perform an incremental copy. Only files that have\n")
-            TEXT("               changed since the last full copy will be copied.\n")
-            TEXT("               Specifying this switch requires the /statefile switch\n")
-            TEXT("               to be specified, as that's where the date of the last\n")
-            TEXT("               full copy is read from.\n")
             TEXT("\n")
             TEXT("/clear       - Recursively delete the destination directory before\n")
             TEXT("               copying. ShadowSpawn will ask for confirmation before\n")
@@ -166,7 +145,6 @@ public:
     {
         COptions options;
 
-        options._backupType = VSS_BT_FULL;
         options._clearDestination = false; 
         options._verbosityLevel = VERBOSITY_LEVEL_NORMAL; 
         options._acceptAll = false; 
@@ -190,21 +168,9 @@ public:
             {
                 arg = arg.Mid(1);
 
-                if (arg.Compare(TEXT("full")) == 0)
-                {
-                    options._backupType = VSS_BT_FULL; 
-                }
-                else if (arg.Compare(TEXT("incremental")) == 0)
-                {
-                    options._backupType = VSS_BT_INCREMENTAL; 
-                }
-                else if (arg.Compare(TEXT("clear")) == 0)
+				if (arg.Compare(TEXT("clear")) == 0)
                 {
                     options._clearDestination = true; 
-                }
-                else if (Utilities::StartsWith(arg, TEXT("statefile=")))
-                {
-                    options._stateFile = GetArgValue(arg); 
                 }
                 else if (Utilities::StartsWith(arg, TEXT("verbosity=")))
                 {
@@ -261,11 +227,6 @@ public:
         // Normalize paths to full paths
         options._source = NormalizePath(options._source); 
         options._destination = NormalizePath(options._destination); 
-
-        if (!options._stateFile.IsEmpty())
-        {
-            options._stateFile = NormalizePath(options._stateFile); 
-        }
 
         return options; 
     }

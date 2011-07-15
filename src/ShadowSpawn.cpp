@@ -29,7 +29,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "CDirectoryAction.h"
 #include "CCopyAction.h"
 #include "OutputWriter.h"
-#include "CBackupState.h"
 #include "CIncludeAllCopyFilter.h"
 #include "CModifiedSinceCopyFilter.h"
 #include "CFilespecCopyFilter.h"
@@ -152,27 +151,6 @@ int _tmain(int argc, _TCHAR* argv[])
                 }
             }
         }
-
-        CBackupState backupState; 
-
-        LPSYSTEMTIME lastBackupTime; 
-
-        if (options.get_BackupType() == VSS_BT_INCREMENTAL)
-        {
-            backupState.Load(options.get_StateFile()); 
-
-            LPSYSTEMTIME lastFullBackupTime = backupState.get_LastFullBackupTime(); 
-            LPSYSTEMTIME lastIncrementalBackupTime = backupState.get_LastIncrementalBackupTime(); 
-            if (lastIncrementalBackupTime != NULL)
-            {
-                lastBackupTime = lastIncrementalBackupTime; 
-            }
-            else
-            {
-                lastBackupTime = lastFullBackupTime; 
-            }
-        }
-
 
         OutputWriter::WriteLine(TEXT("Calling CreateVssBackupComponents")); 
         CHECK_HRESULT(::CreateVssBackupComponents(&pBackupComponents)); 
@@ -487,16 +465,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
             vector<CCopyFilter*> filters; 
 
-            if (options.get_BackupType() == VSS_BT_FULL)
-            {
-                filters.push_back(new CIncludeAllCopyFilter()); 
-            }
-            else if (options.get_BackupType() == VSS_BT_INCREMENTAL)
-            {
-                filters.push_back(new CModifiedSinceCopyFilter(lastBackupTime, options.get_SkipDenied()));
-            }
+            filters.push_back(new CIncludeAllCopyFilter()); 
 
-            filters.push_back(new CFilespecCopyFilter(options.get_Filespecs())); 
+			filters.push_back(new CFilespecCopyFilter(options.get_Filespecs())); 
 
             CCopyAction copyAction(wszSource, options.get_Destination(), options.get_SkipDenied(), filters); 
             ProcessDirectory(wszSource, copyAction, TEXT(""), options.get_Recursive(), options.get_IgnorePattern()); 
@@ -529,28 +500,6 @@ int _tmain(int argc, _TCHAR* argv[])
             OutputWriter::WriteLine(TEXT("Call to BackupComplete finished.")); 
 
             bAbnormalAbort = false; 
-
-            if (options.get_StateFile() != NULL)
-            {
-                OutputWriter::WriteLine(TEXT("Calling SaveAsXML"));
-                CComBSTR bstrBackupDocument; 
-                CHECK_HRESULT(pBackupComponents->SaveAsXML(&bstrBackupDocument)); 
-
-                if (options.get_BackupType() == VSS_BT_FULL)
-                {
-                    backupState.set_LastFullBackupTime(&snapshotTime); 
-                }
-                else if (options.get_BackupType() == VSS_BT_INCREMENTAL)
-                {
-                    backupState.set_LastIncrementalBackupTime(&snapshotTime); 
-                }
-                else
-                {
-                    throw new CShadowSpawnException(TEXT("Unsupported backup type.")); 
-                }
-
-                backupState.Save(options.get_StateFile(), bstrBackupDocument); 
-            }
         }
     }
     catch (CComException* e)
