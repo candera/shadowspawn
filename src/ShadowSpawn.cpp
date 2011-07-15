@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2011 Wangdera Corporation (shadowspawn@wangdera.com)
+Copyright (c) 2011 Craig Andera (shadowspawn@wangdera.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -58,7 +58,7 @@ int _tmain(int argc, _TCHAR* argv[])
     //::DebugBreak(); 
 
     OutputWriter::SetVerbosityLevel(VERBOSITY_LEVEL_NORMAL); 
-    OutputWriter::WriteLine(TEXT("ShadowSpawn (c) 2011 Wangdera Corporation. shadowspawn@wangdera.com"), 
+    OutputWriter::WriteLine(TEXT("ShadowSpawn (c) 2011 Craig Andera. shadowspawn@wangdera.com"), 
         VERBOSITY_THRESHOLD_UNLESS_SILENT); 
     OutputWriter::WriteLine(TEXT(""), VERBOSITY_THRESHOLD_UNLESS_SILENT); 
 
