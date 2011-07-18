@@ -125,6 +125,11 @@ public:
                 {
                     options._simulate = true; 
                 }
+                else if (arg.Compare(TEXT("?")) == 0)
+                {
+                    OutputWriter::WriteLine(COptions::get_Usage(), VERBOSITY_THRESHOLD::VERBOSITY_THRESHOLD_ALWAYS); 
+                    exit(0);
+                }
                 else
                 {
                     assert(false);
@@ -181,11 +186,14 @@ private:
     static CString NormalizePath(LPCTSTR path)
     {
         int length = MAX_PATH; 
+        CString tmpPath = path;
         while (true)
         {
             _TCHAR* normalizedPath = new _TCHAR[length]; 
             LPTSTR filePart; 
-            DWORD result = ::GetFullPathName(path, MAX_PATH, normalizedPath, &filePart);
+
+            tmpPath.Replace(L"\"", L"");
+            DWORD result = ::GetFullPathName(tmpPath, MAX_PATH, normalizedPath, &filePart);
 
             if (result == 0)
             {
