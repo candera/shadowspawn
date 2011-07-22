@@ -97,8 +97,7 @@ int _tmain(int argc, _TCHAR* argv[])
         Utilities::FormatDateTime(&startTime, TEXT(" "), false, startTimeString); 
 
         CString message; 
-        message.AppendFormat(TEXT("Starting a %s copy from %s to %s"), 
-            options.get_BackupType() == VSS_BT_FULL ? TEXT("full") : TEXT("incremental"), 
+        message.AppendFormat(TEXT("Shadowing %s at %s"), 
             options.get_Source(), 
             options.get_Device()); 
         OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
@@ -405,6 +404,7 @@ int _tmain(int argc, _TCHAR* argv[])
                 wszSource
                 );
 
+            OutputWriter::WriteLine(TEXT("Calling DefineDosDevice to mount device.")); 
             if (0 == wszSource.Find(TEXT("\\\\?\\GLOBALROOT")))
             {
                 wszSource = wszSource.Mid(_tcslen(TEXT("\\\\?\\GLOBALROOT")));
@@ -416,7 +416,7 @@ int _tmain(int argc, _TCHAR* argv[])
                 CString errorMessage; 
                 Utilities::FormatErrorMessage(error, errorMessage); 
                 CString message; 
-                message.AppendFormat(TEXT("There was an error calling DefineDosDevice. Error: %s"), errorMessage); 
+                message.AppendFormat(TEXT("There was an error calling DefineDosDevice when mounting a device. Error: %s"), errorMessage); 
                 throw new CShadowSpawnException(message.GetString()); 
             }
 
@@ -430,6 +430,8 @@ int _tmain(int argc, _TCHAR* argv[])
             options.get_Command().copy(copyCommand, commandLength);
             copyCommand[commandLength] = L'\0';
 
+            message.Format(TEXT("Launching command: %s"), options.get_Command().c_str());
+            OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
             bWorked = CreateProcess(NULL, copyCommand, NULL, NULL, FALSE, 0, NULL, 
                                     NULL, &startUpInfo, &processInformation);
             if (!bWorked)
@@ -439,14 +441,16 @@ int _tmain(int argc, _TCHAR* argv[])
                 Utilities::FormatErrorMessage(error, errorMessage); 
                 CString message; 
                 message.AppendFormat(TEXT("There was an error calling CreateProcess. Process: %s Error: %s"), 
-                    options.get_Command(), errorMessage); 
+                    options.get_Command().c_str(), errorMessage); 
                 throw new CShadowSpawnException(message.GetString()); 
             }
 
             WaitForSingleObject(processInformation.hProcess, INFINITE);
             CloseHandle(processInformation.hThread);
             CloseHandle(processInformation.hProcess);
+            OutputWriter::WriteLine(TEXT("Launched command finished."), VERBOSITY_THRESHOLD_NORMAL); 
 
+            OutputWriter::WriteLine(TEXT("Calling DefineDosDevice to remove device.")); 
             bWorked = DefineDosDevice(DDD_REMOVE_DEFINITION, options.get_Device(), NULL); 
             if (!bWorked)
             {
@@ -457,6 +461,7 @@ int _tmain(int argc, _TCHAR* argv[])
                 message.AppendFormat(TEXT("There was an error calling DefineDosDevice. Error: %s"), errorMessage); 
                 throw new CShadowSpawnException(message.GetString()); 
             }
+
             OutputWriter::WriteLine(TEXT("Calling BackupComplete")); 
             CComPtr<IVssAsync> pBackupCompleteResults; 
             CHECK_HRESULT(pBackupComponents->BackupComplete(&pBackupCompleteResults)); 
@@ -505,44 +510,7 @@ int _tmain(int argc, _TCHAR* argv[])
     }
 
     Cleanup(false, bSnapshotCreated, pBackupComponents, snapshotSetId);
-    OutputWriter::WriteLine(TEXT("Backup successfully completed."), VERBOSITY_THRESHOLD_UNLESS_SILENT); 
-
-    CString message; 
-    CString startTimeStringLocal; 
-    Utilities::FormatDateTime(&startTime, TEXT(" "), true, startTimeStringLocal); 
-    CString finishTimeString; 
-    SYSTEMTIME finishTime; 
-    ::GetSystemTime(&finishTime); 
-    Utilities::FormatDateTime(&finishTime, TEXT(" "), true, finishTimeString); 
-    message.AppendFormat(TEXT("Backup started at %s, completed at %s."), 
-        startTimeStringLocal, finishTimeString); 
-    OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
-    message.Empty(); 
-
-    float unitCount = (float) byteCount; 
-    LPCTSTR units = TEXT("bytes"); 
-
-    if (unitCount > 1024)
-    {
-        unitCount = unitCount / 1024.0F; 
-        units = TEXT("KB"); 
-    }
-
-    if (unitCount > 1024)
-    {
-        unitCount = unitCount / 1024.0F; 
-        units = TEXT("MB"); 
-    }
-
-    if (unitCount > 1024)
-    {
-        unitCount = unitCount / 1024.0F; 
-        units = TEXT("GB"); 
-    }
-
-    message.AppendFormat(TEXT("%d files (%.2f %s, %d directories) copied, %d files skipped"), 
-        fileCount, unitCount, units, directoryCount, skipCount); 
-    OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
+    OutputWriter::WriteLine(TEXT("Shadowing successfully completed."), VERBOSITY_THRESHOLD_NORMAL); 
 
     return 0;
 }
