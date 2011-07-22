@@ -22,7 +22,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <assert.h>
-#include "CShadowSpawnException.h"
 #include "CParseOptionsException.h"
 #include "Utilities.h"
 #include "OutputWriter.h"
@@ -171,6 +170,27 @@ public:
             message.Append(options._device); 
             throw new CParseOptionsException(message); 
         }
+        
+        TCHAR targetPath[4096];
+        DWORD result = QueryDosDevice(options._device, targetPath, 4096);
+        if (0 == result)
+        {
+            DWORD error = ::GetLastError(); 
+            if (error != 2)
+            {
+                CString errorMessage; 
+                Utilities::FormatErrorMessage(error, errorMessage); 
+                CString message; 
+                message.AppendFormat(TEXT("Error calling QueryDosDevice: %s"), errorMessage); 
+                throw new CParseOptionsException(message.GetString()); 
+            }
+        }
+        else
+        {
+            CString message("Device already exists.  Device = "); 
+            message.Append(options._device); 
+            throw new CParseOptionsException(message); 
+        }
 
         return options; 
     }
@@ -190,9 +210,9 @@ private:
 
         return arg.Mid(index + 1); 
     }
-    static bool IsValidDevice(const CString& arg)
+    static bool IsValidDevice(const CString& device)
     {
-        CString temp(arg);
+        CString temp(device);
         temp.MakeLower();
 
         if (2 != temp.GetLength() || TEXT(':') != temp.GetAt(1))
@@ -227,7 +247,7 @@ private:
                 Utilities::FormatErrorMessage(error, errorMessage); 
                 CString message; 
                 message.AppendFormat(TEXT("Error calling GetFullPathName: %s"), errorMessage); 
-                throw new CShadowSpawnException(message.GetString()); 
+                throw new CParseOptionsException(message.GetString()); 
             }
             else if (result > MAX_PATH)
             {
