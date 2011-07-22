@@ -164,6 +164,14 @@ public:
             throw new CParseOptionsException(TEXT("Missing required arguments.")); 
         }
 
+        options._device.TrimRight(TEXT('\\'));  
+        if (!IsValidDevice(options._device))
+        {
+            CString message("Device format is incorrect.  Device = "); 
+            message.Append(options._device); 
+            throw new CParseOptionsException(message); 
+        }
+
         return options; 
     }
 
@@ -181,6 +189,24 @@ private:
         }
 
         return arg.Mid(index + 1); 
+    }
+    static bool IsValidDevice(const CString& arg)
+    {
+        CString temp(arg);
+        temp.MakeLower();
+
+        if (2 != temp.GetLength() || TEXT(':') != temp.GetAt(1))
+        {
+            return false;
+        }
+
+        TCHAR driveLetter = temp.GetAt(0);
+        if (driveLetter > TEXT('z') || driveLetter < TEXT('a'))
+        {
+            return false;
+        }
+     
+        return true;
     }
     static CString NormalizePath(LPCTSTR path)
     {
