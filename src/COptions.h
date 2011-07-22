@@ -34,7 +34,7 @@ class COptions
 private: 
     wstring _command;
     bool _debug; 
-    CString _destination; 
+    CString _device; 
     bool _simulate; 
     CString _source; 
     int _verbosityLevel;
@@ -52,9 +52,9 @@ public:
     {
         return _debug; 
     }
-    LPCTSTR get_Destination(void)
+    LPCTSTR get_Device(void)
     {
-        return _destination.GetString(); 
+        return _device.GetString(); 
     }
     bool get_Simulate(void)
     {
@@ -144,9 +144,9 @@ public:
                 {
                     options._source = tokens[i].c_str(); 
                 }
-                else if (options._destination.IsEmpty())
+                else if (options._device.IsEmpty())
                 {
-                    options._destination = tokens[i].c_str(); 
+                    options._device = tokens[i].c_str(); 
                 }
                 else
                 {
@@ -158,9 +158,9 @@ public:
 
         // Normalize paths to full paths
         options._source = NormalizePath(options._source); 
-        options._destination = NormalizePath(options._destination); 
+        options._device = NormalizePath(options._device); 
 
-        if (options._source.IsEmpty() || options._destination.IsEmpty() || options._command.empty())
+        if (options._source.IsEmpty() || options._device.IsEmpty() || options._command.empty())
         {
             throw new CParseOptionsException(TEXT("Missing required arguments.")); 
         }

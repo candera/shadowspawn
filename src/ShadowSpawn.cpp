@@ -100,7 +100,7 @@ int _tmain(int argc, _TCHAR* argv[])
         message.AppendFormat(TEXT("Starting a %s copy from %s to %s"), 
             options.get_BackupType() == VSS_BT_FULL ? TEXT("full") : TEXT("incremental"), 
             options.get_Source(), 
-            options.get_Destination()); 
+            options.get_Device()); 
         OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
 
         OutputWriter::WriteLine(TEXT("Calling CreateVssBackupComponents")); 
