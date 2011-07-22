@@ -1,12 +1,12 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <ItemGroup>
-        <ProjectToBuild Include="HoboCopy.sln">
+        <ProjectToBuild Include="src\ShadowSpawn.sln">
             <Properties>Configuration=Release-W2K3;Platform=x86</Properties>
         </ProjectToBuild>
-      <ProjectToBuild Include="HoboCopy.sln">
+      <ProjectToBuild Include="src\ShadowSpawn.sln">
         <Properties>Configuration=Release-W2K3;Platform=x64</Properties>
       </ProjectToBuild>
-      <ProjectToBuild Include="HoboCopy.sln">
+      <ProjectToBuild Include="src\ShadowSpawn.sln">
             <Properties>Configuration=Release-XP;Platform=x86</Properties>
         </ProjectToBuild>
     </ItemGroup>
