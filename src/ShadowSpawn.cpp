@@ -54,6 +54,7 @@ int _tmain(int argc, _TCHAR* argv[])
     bool bSnapshotCreated = false;
     bool bAbnormalAbort = true; 
     bool bDeviceMounted = false;
+    DWORD exitCode = 0;
     CString mountedDevice;
     CComPtr<IVssBackupComponents> pBackupComponents; 
 
@@ -449,9 +450,23 @@ int _tmain(int argc, _TCHAR* argv[])
             }
 
             WaitForSingleObject(processInformation.hProcess, INFINITE);
+
+            bWorked = GetExitCodeProcess(processInformation.hProcess, &exitCode);
+            if (!bWorked)
+            {
+                DWORD error = ::GetLastError(); 
+                CString errorMessage; 
+                Utilities::FormatErrorMessage(error, errorMessage); 
+                CString message; 
+                message.AppendFormat(TEXT("There was an error calling GetExitCodeProcess. Error: %s"), errorMessage); 
+                throw new CShadowSpawnException(message.GetString()); 
+            }
+
             CloseHandle(processInformation.hThread);
             CloseHandle(processInformation.hProcess);
-            OutputWriter::WriteLine(TEXT("Launched command finished."), VERBOSITY_THRESHOLD_NORMAL); 
+
+            message.Format(TEXT("Launched command finished with exit code: %d."), exitCode);
+            OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
 
             OutputWriter::WriteLine(TEXT("Calling DefineDosDevice to remove device.")); 
             bWorked = DefineDosDevice(DDD_REMOVE_DEFINITION, options.get_Device(), NULL); 
@@ -515,6 +530,10 @@ int _tmain(int argc, _TCHAR* argv[])
 
     Cleanup(false, bSnapshotCreated, mountedDevice, pBackupComponents, snapshotSetId);
     OutputWriter::WriteLine(TEXT("Shadowing successfully completed."), VERBOSITY_THRESHOLD_NORMAL); 
+    if (exitCode != 0)
+    {
+        return (0x8000 | exitCode);
+    }
 
     return 0;
 }
