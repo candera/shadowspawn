@@ -1,16 +1,22 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <ItemGroup>
-        <ProjectToBuild Include="src\ShadowSpawn.sln">
-            <Properties>Configuration=Release-W2K3;Platform=x86</Properties>
-        </ProjectToBuild>
-      <ProjectToBuild Include="src\ShadowSpawn.sln">
-        <Properties>Configuration=Release-W2K3;Platform=x64</Properties>
-      </ProjectToBuild>
-      <ProjectToBuild Include="src\ShadowSpawn.sln">
-            <Properties>Configuration=Release-XP;Platform=x86</Properties>
-        </ProjectToBuild>
+        <SolutionToBuild Include="D:\src\shadowspawn\src\ShadowSpawn.sln"/>
     </ItemGroup>
     <Target Name="Build">
-        <MSBuild Projects="@(ProjectToBuild)"/>
+        <MSBuild
+            Projects="@(SolutionToBuild)"
+            Properties="Platform=x64;Flavor=Release-W2K3;Configuration=Release-W2K3"
+            StopOnFirstFailure="true"
+            />
+        <MSBuild
+            Projects="@(SolutionToBuild)"
+            Properties="Platform=x86;Flavor=Release-W2K3;Configuration=Release-W2K3"
+            StopOnFirstFailure="true"
+            />
+        <MSBuild
+            Projects="@(SolutionToBuild)"
+            Properties="Platform=x86;Flavor=Release-XP;Configuration=Release-XP"
+            StopOnFirstFailure="true"
+            />
     </Target>
 </Project>
