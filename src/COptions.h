@@ -158,7 +158,6 @@ public:
 
         // Normalize paths to full paths
         options._source = NormalizePath(options._source); 
-        options._device = NormalizePath(options._device); 
 
         if (options._source.IsEmpty() || options._device.IsEmpty() || options._command.empty())
         {

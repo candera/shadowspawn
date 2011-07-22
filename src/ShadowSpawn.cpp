@@ -405,8 +405,21 @@ int _tmain(int argc, _TCHAR* argv[])
                 wszSource
                 );
 
-            OutputWriter::WriteLine(TEXT("Run external copy program here.")); 
-            
+            if (0 == wszSource.Find(TEXT("\\\\?\\GLOBALROOT")))
+            {
+                wszSource = wszSource.Mid(_tcslen(TEXT("\\\\?\\GLOBALROOT")));
+            }
+            bWorked = DefineDosDevice(DDD_RAW_TARGET_PATH, options.get_Device(), wszSource); 
+            if (!bWorked)
+            {
+                DWORD error = ::GetLastError(); 
+                CString errorMessage; 
+                Utilities::FormatErrorMessage(error, errorMessage); 
+                CString message; 
+                message.AppendFormat(TEXT("There was an error calling DefineDosDevice. Error: %s"), errorMessage); 
+                throw new CShadowSpawnException(message.GetString()); 
+            }
+
             STARTUPINFO startUpInfo;
             memset(&startUpInfo, 0, sizeof(startUpInfo));
             startUpInfo.cb = sizeof(startUpInfo);
@@ -434,6 +447,16 @@ int _tmain(int argc, _TCHAR* argv[])
             CloseHandle(processInformation.hThread);
             CloseHandle(processInformation.hProcess);
 
+            bWorked = DefineDosDevice(DDD_REMOVE_DEFINITION, options.get_Device(), NULL); 
+            if (!bWorked)
+            {
+                DWORD error = ::GetLastError(); 
+                CString errorMessage; 
+                Utilities::FormatErrorMessage(error, errorMessage); 
+                CString message; 
+                message.AppendFormat(TEXT("There was an error calling DefineDosDevice. Error: %s"), errorMessage); 
+                throw new CShadowSpawnException(message.GetString()); 
+            }
             OutputWriter::WriteLine(TEXT("Calling BackupComplete")); 
             CComPtr<IVssAsync> pBackupCompleteResults; 
             CHECK_HRESULT(pBackupComponents->BackupComplete(&pBackupCompleteResults)); 
