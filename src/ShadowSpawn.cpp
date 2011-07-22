@@ -35,7 +35,7 @@ bool s_cancel = false;
 
 // Forward declarations
 void CalculateSourcePath(LPCTSTR wszSnapshotDevice, LPCTSTR wszBackupSource, LPCTSTR wszMountPoint, CString& output);
-void Cleanup(bool bAbnormalAbort, bool bSnapshotcreated, CComPtr<IVssBackupComponents> pBackupComponents, GUID snapshotSetId);
+void Cleanup(bool bAbnormalAbort, bool bSnapshotCreated, const CString& mountedDevice, CComPtr<IVssBackupComponents> pBackupComponents, GUID snapshotSetId);
 bool Confirm(LPCTSTR message); 
 BOOL WINAPI CtrlHandler(DWORD dwCtrlType); 
 bool ShouldAddComponent(CWriterComponent& component);
@@ -53,6 +53,8 @@ int _tmain(int argc, _TCHAR* argv[])
     GUID snapshotSetId = GUID_NULL; 
     bool bSnapshotCreated = false;
     bool bAbnormalAbort = true; 
+    bool bDeviceMounted = false;
+    CString mountedDevice;
     CComPtr<IVssBackupComponents> pBackupComponents; 
 
     int fileCount = 0; 
@@ -419,6 +421,7 @@ int _tmain(int argc, _TCHAR* argv[])
                 message.AppendFormat(TEXT("There was an error calling DefineDosDevice when mounting a device. Error: %s"), errorMessage); 
                 throw new CShadowSpawnException(message.GetString()); 
             }
+            mountedDevice = options.get_Device();
 
             STARTUPINFO startUpInfo;
             memset(&startUpInfo, 0, sizeof(startUpInfo));
@@ -461,6 +464,7 @@ int _tmain(int argc, _TCHAR* argv[])
                 message.AppendFormat(TEXT("There was an error calling DefineDosDevice. Error: %s"), errorMessage); 
                 throw new CShadowSpawnException(message.GetString()); 
             }
+            mountedDevice.Empty();
 
             OutputWriter::WriteLine(TEXT("Calling BackupComplete")); 
             CComPtr<IVssAsync> pBackupCompleteResults; 
@@ -484,7 +488,7 @@ int _tmain(int argc, _TCHAR* argv[])
     }
     catch (CComException* e)
     {
-        Cleanup(bAbnormalAbort, bSnapshotCreated, pBackupComponents, snapshotSetId);
+        Cleanup(bAbnormalAbort, bSnapshotCreated, mountedDevice, pBackupComponents, snapshotSetId);
         CString message; 
         CString file; 
         e->get_File(file); 
@@ -495,13 +499,13 @@ int _tmain(int argc, _TCHAR* argv[])
     }
     catch (CShadowSpawnException* e)
     {
-        Cleanup(bAbnormalAbort, bSnapshotCreated, pBackupComponents, snapshotSetId);
+        Cleanup(bAbnormalAbort, bSnapshotCreated, mountedDevice, pBackupComponents, snapshotSetId);
         OutputWriter::WriteLine(e->get_Message(), VERBOSITY_THRESHOLD_UNLESS_SILENT); 
         return 1; 
     }
     catch (CParseOptionsException* e)
     {
-        Cleanup(bAbnormalAbort, bSnapshotCreated, pBackupComponents, snapshotSetId);
+        Cleanup(bAbnormalAbort, bSnapshotCreated, mountedDevice, pBackupComponents, snapshotSetId);
         CString message; 
         message.AppendFormat(TEXT("Error: %s\n"), e->get_Message()); 
         OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_UNLESS_SILENT);
@@ -509,7 +513,7 @@ int _tmain(int argc, _TCHAR* argv[])
         return 2; 
     }
 
-    Cleanup(false, bSnapshotCreated, pBackupComponents, snapshotSetId);
+    Cleanup(false, bSnapshotCreated, mountedDevice, pBackupComponents, snapshotSetId);
     OutputWriter::WriteLine(TEXT("Shadowing successfully completed."), VERBOSITY_THRESHOLD_NORMAL); 
 
     return 0;
@@ -526,7 +530,7 @@ void CalculateSourcePath(LPCTSTR wszSnapshotDevice, LPCTSTR wszBackupSource, LPC
     Utilities::CombinePath(wszSnapshotDevice, subdirectory, output); 
 }
 
-void Cleanup(bool bAbnormalAbort, bool bSnapshotCreated, CComPtr<IVssBackupComponents> pBackupComponents, GUID snapshotSetId)
+void Cleanup(bool bAbnormalAbort, bool bSnapshotCreated, const CString& mountedDevice, CComPtr<IVssBackupComponents> pBackupComponents, GUID snapshotSetId)
 {
     if (pBackupComponents == NULL)
     {
@@ -536,6 +540,19 @@ void Cleanup(bool bAbnormalAbort, bool bSnapshotCreated, CComPtr<IVssBackupCompo
     if (bAbnormalAbort)
     {
         pBackupComponents->AbortBackup(); 
+    }
+    if (!mountedDevice.IsEmpty())
+    {
+        BOOL bWorked = DefineDosDevice(DDD_REMOVE_DEFINITION, mountedDevice, NULL); 
+        if (!bWorked)
+        {
+            DWORD error = ::GetLastError(); 
+            CString errorMessage; 
+            Utilities::FormatErrorMessage(error, errorMessage); 
+            CString message; 
+            message.AppendFormat(TEXT("There was an error calling DefineDosDevice during Cleanup. Error: %s"), errorMessage); 
+            OutputWriter::WriteLine(message);
+        }
     }
     if (bSnapshotCreated)
     {
