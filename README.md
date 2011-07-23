@@ -1,98 +1,131 @@
-# WHAT IS HOBOCOPY? 
+# What Is ShadowSpawn? 
 
-HoboCopy is a backup/copy tool. It is inspired by robocopy in both name and in
-functionality. It differs greatly from robocopy, however, in two respects: 
+ShadowSpawn is a tool for working with shadow copies. Shadow copies
+are read-only snapshots of your disk. Working with shadow copies
+instead of the actual files allows you to do things like work with
+in-use (locked) files. 
 
-1. It is not as full-featured as robocopy. 
-2. It uses the Volume Shadow Service (VSS) to "snapshot" the disk
-before copying. It then copies from the snapshot rather than the "live" disk.
+ShadowSpawn works by making a shadow copy of your disk, making it
+available at a drive letter, then launching (spawning) another
+program that you specify.
+
+Probably the most common way to use ShadowSpawn is to use
+[Robocopy](http://en.wikipedia.org/wiki/Robocopy) make a copy of files
+that are currently in use.
    
-# INSTALLING HOBOCOPY
+# Installing ShadowSpawn
 
-Most users can simply unzip the file containing hobocopy.exe into the directory 
-of your choice. However, HoboCopy uses the Visual C++ 8.0 runtime, which may
-not be present on some machines. If HoboCopy does not work for you, run the 
-vcredist executable available from the same location you downloaded HoboCopy. 
+Most users can simply unzip the appropriate zip file from
+[the download page](https://github.com/candera/shadowspawn/downloads).
+ShadowSpawn.exe can then just be run - there is no installer.
+However, ShadowSpawn uses the Visual C++  runtime, which may not be
+present on some machines. If ShadowSpawn does not work for you, run the
+vcredist executable available from the same download page.
+
+# Running ShadowSpawn
+
+ShadowSpawn is a command-line tool: there is no GUI.
+
+ShadowSpawn take three arguments: 
+
+1. The directory that contains the files you want to snapshot. 
+1. An available drive letter where the snapshot will become visible. 
+1. A command to run. 
+
+Let's say that you wanted to use robocopy to copy files from the
+`C:\foo` directory to the `C:\bar` directory. You could do that with
+the following command: 
+
+    shadowspawn C:\foo Q: robocopy Q:\ C:\bar /s
+    
+That would cause shadowspawn to 
+
+1. Make a shadow copy of the C: drive. 
+1. Mount the shadowed version of the C:\foo directory at Q:.
+1. Launch `robocopy Q:\ C:\bar /s`
+1. Wait for Robocopy to finish. 
+1. Clean up the shadow copy and remove it from Q:
+
+You can use any drive letter you want (it doesn't have to be `Q:`),
+but it does have to be a drive letter that's not currently being used
+for anything else.
+
+You can run any command you want. So if you just wanted to use notepad
+to look at a shadow copy of `C:\foo\blah.txt`, you'd run
+
+    shadowspawn C:\foo Q: notepad Q:\blah.txt
+    
+Just remember that shadowspawn will remove the Q: drive as soon as the
+command you specify exits. 
+
+# Relationship to HoboCopy
+
+ShadowSpawn is derived from the same source code as
+[HoboCopy](https://github.com/candera/hobocopy) and is intended to
+replace it. The evolution was driven by the fact that although the
+shadow copy part of HoboCopy works well enough, the copying part was
+nowhere near as robust as tools like RoboCopy. By providing a tool
+that just takes care of the shadow copy, ShadowSpawn allows users to
+work with locked and in-use files using any other tool, not just the
+limited copy features provided by HoboCopy.
+
+# Status
+
+ShadowSpawn is currently at version 0.1.0, which is meant to indicate
+that it is an initial version. While it largely consists of fairly
+mature code taken from HoboCopy, there are bound to be a few issues as
+early adopters identify opportunities for improvement. 
+
+# Reporting Bugs and Requesting Features
+
+Please report bugs and request features using either
+[the project issue tracking system](https://github.com/candera/shadowspawn/issues)
+or the project mailing list at shadowspawn-tool@googlegroups.com
+([website](http://groups.google.com/group/shadowspawn-tool)). 
    
-# WHY DOES HOBCOPY USE THE VOLUME SHADOW SERVICE?    
-   
-Because HoboCopy copies from a VSS snapshot, it is able copy even files that 
-are in locked by some other program. Further, certain programs (such as SQL 
-Server 2005) are VSS-aware, and will write their state to disk in a consistent
-state before the snapshot is taken, allowing a sort of "live backup". Files 
-locked by VSS-unaware programs will still be copied in a "crash consistent"
-state (i.e. whatever happens to be on the disk). This is generally a lot 
-better than not being able to copy the file at all. 
-
-# IS HOBOCOPY A BACKUP TOOL? 
-
-Well, not exactly. It can be used that way, but it doesn't do a few things
-that "real" backup tools to. For example, there's currently no support for
-differential copies. Also, it does not currently make use of the OS support
-for doing backups that would allow it to do things like copy even files
-it does not nominally have permission to copy. 
-
-The other caveat is that HoboCopy is a hobby project. Therefore, it is not 
-recommended that anyone use it as a backup strategy for valuable information 
-- no warranty is provided in the event that something goes wrong. 
-
-That said, the author of the tool uses it to back up his own systems. 
-
 # USAGE: 
 
 <pre>
-hobocopy [/statefile=FILE] [/verbosity=LEVEL] [ /full | /incremental ]
-         [ /clear ] [ /skipdenied ] [ /y ] [ /simulate ] [/recursive]
-         src dest [file [file [ ... ] ]
+Usage:
 
-Recursively copies a directory tree from src to dest.
+shadowspawn [ /verbosity=LEVEL ] &lt;src> &lt;drive:> &lt;command> [ &lt;arg> ... ]
 
-/statefile   - Specifies a file where information about the copy will
-               be written. This argument is required when /incremental
-               is specified, as the date and time of the last copy is
-               read from this file to determine which files should be
-               copied.
+Creates a shadow copy of &lt;src>, mounts it at &lt;drive:> and runs &lt;command>.
 
-/verbosity   - Specifies how much information HoboCopy will emit
-               during copy. Legal values are: 0 - almost no
+/verbosity   - Specifies how much information ShadowSpawn will emit
+               during execution. Legal values are: 0 - almost no
                information will be emitted. 1 - Only error information
                will be emitted. 2 - Errors and warnings will be
                emitted. 3 - Errors, warnings, and some status
                information will be emitted. 4 - Lots of diagnostic
                information will be emitted. The default level is 2.
 
-/full        - Perform a full copy. All files will be copied
-               regardless of modification date.
+&lt;src>        - The directory to shadow copy (the source directory).
+&lt;drive:>     - Where to mount the shadow copy. Must be a single letter
+               followed by a colon. E.g. 'X:'. The drive letter must be
+               available (i.e. nothing else mounted there).
+&lt;command>    - A command to run. ShadowSpawn will ensure that &lt;src> is
+               mounted at &lt;drive:> before starting &lt;command>, and will
+               wait for &lt;command> to finish before unmounting &lt;drive:>
 
-/incremental - Perform an incremental copy. Only files that have
-               changed since the last full copy will be copied.
-               Specifying this switch requires the /statefile switch
-               to be specified, as that's where the date of the last
-               full copy is read from.
 
-/clear       - Recursively delete the destination directory before
-               copying. HoboCopy will ask for confirmation before
-               deleting unless the /y switch is also specified.
+Exit Status:
 
-/skipdenied  - By default, if HoboCopy does not have sufficient
-               privilege to copy a file, the copy will fail with an
-               error. When the /skipdenied switch is specified,
-               permission errors trying to copy a source file result
-               in the file being skipped and the copy continuing.
+If there is an error while processing (e.g. ShadowSpawn fails to
+create the shadow copy), ShadowSpawn exits with status 1.
 
-/y           - Instructs HoboCopy to proceed as if user answered yes
-               to any confirmation prompts. Use with caution - in
-               combination with the /clear switch, this switch will
-               cause the destination directory to be deleted without
-               confirmation.
+If there is an error in usage (i.e. the user specifies an unknown
+option), ShadowSpawn exits with status 2.
 
-/simulate    - Simulates copy only - no snapshot is taken and no copy
-               is performed.
+If everything else executes as expected and &lt;command> exits with
+status zero, ShadowSpawn also exits with status 0.
 
-/recursive   - Copies subdirectories (including empty ones). Shortcut: /r
+If everything else executes as expected and &lt;command> exits with a
+nonzero status code n, ShadowSpawn exits with status n logically OR'ed
+with 32768 (0x8000). For example, robocopy exits with status 1 when
+one or more files are Scopied. So, when executing
 
-src          - The directory to copy (the source directory).
-dest         - The directory to copy to (the destination directory).
-file         - A file (e.g. foo.txt) or filespec (e.g. *.txt) to copy.
-               Defaults to *.*.
+  shadowspawn C:\foo X: robocopy X:\ C:\path\to\backup /mir
+
+the exit code of ShadowSpawn would be 32769 (0x8000 | 0x1).
 </pre>
