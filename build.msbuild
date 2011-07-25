@@ -1,6 +1,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <ItemGroup>
-        <SolutionToBuild Include="D:\src\shadowspawn\src\ShadowSpawn.sln"/>
+        <SolutionToBuild Include=".\src\ShadowSpawn.sln"/>
     </ItemGroup>
     <Target Name="Build">
         <MSBuild
