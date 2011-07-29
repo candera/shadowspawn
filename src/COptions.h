@@ -365,45 +365,42 @@ private:
     }
     static void RawParse(vector<wstring>& tokens)
     {
-        wchar_t* lp = GetCommandLineW();
+        wchar_t *lp = GetCommandLineW();
+        wstring token;
+        bool bActiveToken = false;
+        bool bFirstQuoteFound = false;
+
         while (*lp != L'\0')
         {
-            if (*lp == L'\"')
+            if (*lp == ' ' && bFirstQuoteFound == false)
             {
-                wstring token;
-                token.assign(1, L'\"');
-                lp++;
-                while (*lp != L'\"' && *lp != L'\0')
+                if (bActiveToken == true)
                 {
-                    token.append(1, *lp);
-                    lp++;
+                    tokens.push_back(token);
+                    token.clear();
+                    bActiveToken = false;
                 }
                 lp++;
-                token.append(1, L'\"');
-                tokens.push_back(token);
+                continue;
             }
-            else if (*lp == L' ')
+            
+            if (*lp == L'\"' && bFirstQuoteFound == false)
             {
-                wstring token;
-                while (*lp == L' ') lp++;
-                while (*lp != L' ' && *lp != L'\0')
-                {
-                    token.append(1, *lp);
-                    lp++;
-                }
-                if (!token.empty()) tokens.push_back(token);
+                assert(bActiveToken == false);  // TODO: this is hit when a spurious " is added, should be a friendly usage error
+                bFirstQuoteFound = true;
             }
-            else  // start of command line when outside of debugger
+            else if (*lp == '\"' && bFirstQuoteFound == true)
             {
-                wstring token;
-                assert(tokens.empty());
-                while (*lp != L' ' && *lp != L'\0')
-                {
-                    token.append(1, *lp);
-                    lp++;
-                }
-                if (!token.empty()) tokens.push_back(token);
+                bFirstQuoteFound = false;
             }
+            
+            bActiveToken = true;
+            token.append(1, *lp);
+            lp++;
+        }
+        if (bActiveToken == true)
+        {
+            tokens.push_back(token);
         }
     }
     static void ThrowRegexParseException(const TCHAR* pszDetails) 
