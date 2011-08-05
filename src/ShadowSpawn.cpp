@@ -79,6 +79,13 @@ int _tmain(int argc, _TCHAR* argv[])
 			OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_IF_VERBOSE);
 		}
 
+        if (!Utilities::DirectoryExists(options.get_Source()))
+        {
+            CString message;
+            message.AppendFormat(TEXT("Source path is not an existing directory: %s"), options.get_Source());
+            throw new CShadowSpawnException(message); 
+        }
+
         OutputWriter::WriteLine(TEXT("Calling CoInitialize")); 
         CHECK_HRESULT(::CoInitialize(NULL)); 
         CHECK_HRESULT(
