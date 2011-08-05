@@ -314,7 +314,12 @@ private:
             
             if (*lp == L'\"' && bFirstQuoteFound == false)
             {
-                assert(bActiveToken == false);  // TODO: this is hit when a spurious " is added, should be a friendly usage error
+                if (bActiveToken == true)
+                {
+                    CString message("Command line contains mismatched quotes: "); 
+                    message.Append(GetCommandLineW()); 
+                    throw new CParseOptionsException(message); 
+                }
                 bFirstQuoteFound = true;
             }
             else if (*lp == '\"' && bFirstQuoteFound == true)
