@@ -291,125 +291,49 @@ private:
         }
 
     }
-    static wregex* ParseRegex(const CString& userInput) 
-    {
-        try
-        {
-            return new wregex(userInput.GetString());
-        }
-        catch (regex_error err)
-        {
-            switch (err.code()) 
-            {
-            case regex_constants::error_badbrace:
-                ThrowRegexParseException(TEXT("The expression contained an invlid count in a { } expression"));			
-                break;
-
-            case regex_constants::error_badrepeat:
-                ThrowRegexParseException(TEXT("A repeat expression (one of '*', '?', '+', '{' in most contexts) was not preceded by an expression"));
-                break;
-
-            case regex_constants::error_brace:
-                ThrowRegexParseException(TEXT("The expression contained an unmatched '{' or '}'"));
-                break;
-
-            case regex_constants::error_brack:
-                ThrowRegexParseException(TEXT("The expression contained an unmatched '[' or ']'"));
-                break;
-
-            case regex_constants::error_collate:
-                ThrowRegexParseException(TEXT("The expression contained an invalid collating element name"));
-                break;
-
-            case regex_constants::error_complexity:
-                ThrowRegexParseException(TEXT("An attempted match failed because it was too complex"));
-                break;
-
-            case regex_constants::error_ctype:
-                ThrowRegexParseException(TEXT("The expression contained an invalid character class name"));
-                break;
-
-            case regex_constants::error_escape:
-                ThrowRegexParseException(TEXT("The expression contained an invalid escape sequence"));
-                break;
-
-            case regex_constants::error_paren:
-                ThrowRegexParseException(TEXT("The expression contained an unmatched '(' or ')'"));
-                break;
-
-            case regex_constants::error_range:
-                ThrowRegexParseException(TEXT("The expression contained an invalid character range specifier"));
-                break;
-
-            case regex_constants::error_space:
-                ThrowRegexParseException(TEXT("Parsing a regular expression failed because there were not enough resources available"));
-                break;
-
-            case regex_constants::error_stack:
-                ThrowRegexParseException(TEXT("An attempted match failed because there was not enough memory available"));
-                break;
-
-            case regex_constants::error_backref:
-                ThrowRegexParseException(TEXT("The expression contained an invalid back reference"));
-                break;
-
-            default:                                
-                ThrowRegexParseException(TEXT("Parse failed"));							
-                break;
-            }
-        }
-
-        ThrowRegexParseException(TEXT("Parse failed"));							
-        return NULL; 
-
-    }
     static void RawParse(vector<wstring>& tokens)
     {
-        wchar_t* lp = GetCommandLineW();
+        wchar_t *lp = GetCommandLineW();
+        wstring token;
+        bool bActiveToken = false;
+        bool bFirstQuoteFound = false;
+
         while (*lp != L'\0')
         {
-            if (*lp == L'\"')
+            if (*lp == ' ' && bFirstQuoteFound == false)
             {
-                wstring token;
-                token.assign(1, L'\"');
-                lp++;
-                while (*lp != L'\"' && *lp != L'\0')
+                if (bActiveToken == true)
                 {
-                    token.append(1, *lp);
-                    lp++;
+                    tokens.push_back(token);
+                    token.clear();
+                    bActiveToken = false;
                 }
                 lp++;
-                token.append(1, L'\"');
-                tokens.push_back(token);
+                continue;
             }
-            else if (*lp == L' ')
+            
+            if (*lp == L'\"' && bFirstQuoteFound == false)
             {
-                wstring token;
-                while (*lp == L' ') lp++;
-                while (*lp != L' ' && *lp != L'\0')
+                if (bActiveToken == true)
                 {
-                    token.append(1, *lp);
-                    lp++;
+                    CString message("Command line contains mismatched quotes: "); 
+                    message.Append(GetCommandLineW()); 
+                    throw new CParseOptionsException(message); 
                 }
-                if (!token.empty()) tokens.push_back(token);
+                bFirstQuoteFound = true;
             }
-            else  // start of command line when outside of debugger
+            else if (*lp == '\"' && bFirstQuoteFound == true)
             {
-                wstring token;
-                assert(tokens.empty());
-                while (*lp != L' ' && *lp != L'\0')
-                {
-                    token.append(1, *lp);
-                    lp++;
-                }
-                if (!token.empty()) tokens.push_back(token);
+                bFirstQuoteFound = false;
             }
+            
+            bActiveToken = true;
+            token.append(1, *lp);
+            lp++;
         }
-    }
-    static void ThrowRegexParseException(const TCHAR* pszDetails) 
-    {
-        CString message;
-        message.Format(TEXT("Couldn't parse regular expression supplied to /ignorepattern option (%s)"), pszDetails);
-        throw new CParseOptionsException(message); 
+        if (bActiveToken == true)
+        {
+            tokens.push_back(token);
+        }
     }
 };

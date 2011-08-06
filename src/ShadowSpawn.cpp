@@ -30,8 +30,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "CWriter.h"
 #include "CWriterComponent.h"
 
-bool s_cancel = false; 
 
+bool bSnapshotCreated = false;
+CString mountedDevice;
+CComPtr<IVssBackupComponents> pBackupComponents; 
+GUID snapshotSetId = GUID_NULL; 
 
 // Forward declarations
 void CalculateSourcePath(LPCTSTR wszSnapshotDevice, LPCTSTR wszBackupSource, LPCTSTR wszMountPoint, CString& output);
@@ -50,13 +53,8 @@ int _tmain(int argc, _TCHAR* argv[])
         VERBOSITY_THRESHOLD_UNLESS_SILENT); 
     OutputWriter::WriteLine(TEXT(""), VERBOSITY_THRESHOLD_UNLESS_SILENT); 
 
-    GUID snapshotSetId = GUID_NULL; 
-    bool bSnapshotCreated = false;
     bool bAbnormalAbort = true; 
-    bool bDeviceMounted = false;
     DWORD exitCode = 0;
-    CString mountedDevice;
-    CComPtr<IVssBackupComponents> pBackupComponents; 
 
     int fileCount = 0; 
     LONGLONG byteCount = 0; 
@@ -80,6 +78,13 @@ int _tmain(int argc, _TCHAR* argv[])
 			message.AppendFormat(TEXT("Argument %d: %s"), i, argv[i]);
 			OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_IF_VERBOSE);
 		}
+
+        if (!Utilities::DirectoryExists(options.get_Source()))
+        {
+            CString message;
+            message.AppendFormat(TEXT("Source path is not an existing directory: %s"), options.get_Source());
+            throw new CShadowSpawnException(message); 
+        }
 
         OutputWriter::WriteLine(TEXT("Calling CoInitialize")); 
         CHECK_HRESULT(::CoInitialize(NULL)); 
@@ -371,19 +376,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
             bSnapshotCreated = true; 
 
-            if (s_cancel)
-            {
-                throw new CShadowSpawnException(TEXT("Processing was cancelled by control-c, control-break, or a shutdown event. Terminating.")); 
-            }
-
-            bWorked = ::SetConsoleCtrlHandler(CtrlHandler, FALSE); 
-
-            if (!bWorked)
-            {
-                OutputWriter::WriteLine(TEXT("Unable to reset control handler. Ctrl-C and Ctrl-Break may have undesirable results."), VERBOSITY_THRESHOLD_NORMAL);
-            }
-
-            HRESULT hrDoSnapshotSetResults; 
+             HRESULT hrDoSnapshotSetResults; 
             CHECK_HRESULT(pDoSnapshotSetResults->QueryStatus(&hrDoSnapshotSetResults, NULL)); 
 
             if (hrDoSnapshotSetResults != VSS_S_ASYNC_FINISHED)
@@ -558,10 +551,17 @@ void Cleanup(bool bAbnormalAbort, bool bSnapshotCreated, const CString& mountedD
 
     if (bAbnormalAbort)
     {
+        OutputWriter::WriteLine(TEXT("Aborting backup."), VERBOSITY_THRESHOLD_NORMAL);
         pBackupComponents->AbortBackup(); 
     }
     if (!mountedDevice.IsEmpty())
     {
+        if (bAbnormalAbort)
+        {
+            CString message;
+            message.AppendFormat(TEXT("Dismounting device: %s"), mountedDevice);
+            OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL);
+        }
         BOOL bWorked = DefineDosDevice(DDD_REMOVE_DEFINITION, mountedDevice, NULL); 
         if (!bWorked)
         {
@@ -575,6 +575,10 @@ void Cleanup(bool bAbnormalAbort, bool bSnapshotCreated, const CString& mountedD
     }
     if (bSnapshotCreated)
     {
+        if (bAbnormalAbort)
+        {
+            OutputWriter::WriteLine(TEXT("Deleting snapshot."), VERBOSITY_THRESHOLD_NORMAL);
+        }
         LONG cDeletedSnapshots; 
         GUID nonDeletedSnapshotId; 
         pBackupComponents->DeleteSnapshots(snapshotSetId, VSS_OBJECT_SNAPSHOT_SET, TRUE, 
@@ -612,9 +616,8 @@ BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
         break;
     }
 
-    s_cancel = true; 
-
-    return TRUE; 
+    Cleanup(true, bSnapshotCreated, mountedDevice, pBackupComponents, snapshotSetId);
+    return false; 
 
 }
 
