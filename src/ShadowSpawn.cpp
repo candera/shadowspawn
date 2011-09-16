@@ -41,6 +41,7 @@ void CalculateSourcePath(LPCTSTR wszSnapshotDevice, LPCTSTR wszBackupSource, LPC
 void Cleanup(bool bAbnormalAbort, bool bSnapshotCreated, const CString& mountedDevice, CComPtr<IVssBackupComponents> pBackupComponents, GUID snapshotSetId);
 bool Confirm(LPCTSTR message); 
 BOOL WINAPI CtrlHandler(DWORD dwCtrlType); 
+GUID GetSystemProviderID();
 bool ShouldAddComponent(CWriterComponent& component);
 LPCSTR WideToNarrow(LPCWSTR wsz);
 
@@ -110,10 +111,12 @@ int _tmain(int argc, _TCHAR* argv[])
             options.get_Device()); 
         OutputWriter::WriteLine(message, VERBOSITY_THRESHOLD_NORMAL); 
 
+		GUID systemProviderId = GetSystemProviderID();
+
         OutputWriter::WriteLine(TEXT("Calling CreateVssBackupComponents")); 
         CHECK_HRESULT(::CreateVssBackupComponents(&pBackupComponents)); 
-
-        OutputWriter::WriteLine(TEXT("Calling InitializeForBackup")); 
+		
+		OutputWriter::WriteLine(TEXT("Calling InitializeForBackup")); 
         CHECK_HRESULT(pBackupComponents->InitializeForBackup()); 
 
         CComPtr<IVssAsync> pWriterMetadataStatus; 
@@ -292,9 +295,10 @@ int _tmain(int argc, _TCHAR* argv[])
             throw new CShadowSpawnException(message.GetString()); 
         }
 
+		
         OutputWriter::WriteLine(TEXT("Calling AddToSnapshotSet")); 
         GUID snapshotId; 
-        CHECK_HRESULT(pBackupComponents->AddToSnapshotSet(wszVolumePathName, GUID_NULL, &snapshotId)); 
+        CHECK_HRESULT(pBackupComponents->AddToSnapshotSet(wszVolumePathName, systemProviderId, &snapshotId)); 
 
         for (unsigned int iWriter = 0; iWriter < writers.size(); ++iWriter)
         {
@@ -642,3 +646,64 @@ bool IsMatch(wregex* pattern, const CString& input)
 	return regex_match(input.GetString(), *pattern); 
 }
 
+GUID GetSystemProviderID(void)
+{
+	CComPtr<IVssBackupComponents> backupComponents; 
+	
+	OutputWriter::WriteLine(TEXT("Calling CreateVssBackupComponents in GetSystemProviderId")); 
+	CHECK_HRESULT(::CreateVssBackupComponents(&backupComponents)); 
+
+	OutputWriter::WriteLine(TEXT("Calling InitializeForBackup in GetSystemProviderId")); 
+	CHECK_HRESULT(backupComponents->InitializeForBackup()); 
+
+	// The following code for selecting the system proviider is necessary 
+	// per http://forum.storagecraft.com/Community/forums/p/177/542.aspx#542
+	// which is a totally awesome post
+	OutputWriter::WriteLine(TEXT("Looking for the system VSS provider"));
+
+	OutputWriter::WriteLine(TEXT("Calling backupComponents->Query(enum providers)"));
+	CComPtr<IVssEnumObject> pEnum; 
+	CHECK_HRESULT(backupComponents->Query(GUID_NULL, VSS_OBJECT_NONE, VSS_OBJECT_PROVIDER, &pEnum));
+
+	GUID systemProviderId = GUID_NULL;
+	VSS_OBJECT_PROP prop;
+	ULONG nFetched;
+	do 
+	{
+		OutputWriter::WriteLine(TEXT("Calling IVssEnumObject::Next"));
+		HRESULT hr = pEnum->Next(1, &prop, &nFetched);
+
+		CString message;
+		message.AppendFormat(TEXT("Examining provider %s to see if it's the system provider..."), prop.Obj.Prov.m_pwszProviderName);
+		OutputWriter::WriteLine(message);
+
+		if (hr == S_OK)
+		{
+			if (prop.Obj.Prov.m_eProviderType == VSS_PROV_SYSTEM)
+			{
+				systemProviderId = prop.Obj.Prov.m_ProviderId; 
+				OutputWriter::WriteLine(TEXT("...and it is."));
+				break;
+			}
+		}
+		else if (hr == S_FALSE)
+		{
+			OutputWriter::WriteLine(TEXT("...but it's not."));
+			break;
+		}
+		else
+		{
+			throw new CComException(hr, __FILE__, __LINE__);
+		}
+	} while (true);
+
+	if (systemProviderId.Data1 == GUID_NULL.Data1 && 
+		systemProviderId.Data2 == GUID_NULL.Data2 &&
+		systemProviderId.Data3 == GUID_NULL.Data3 &&
+		systemProviderId.Data4 == GUID_NULL.Data4)
+	{
+		throw new CShadowSpawnException(TEXT("Unable to locate the system snapshot provider."));
+	}
+
+	return systemProviderId;
+}
