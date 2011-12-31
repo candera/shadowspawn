@@ -127,7 +127,7 @@ public:
             CString arg(tokens[i].c_str()); 
             arg.MakeLower();
 
-            if (options._command.empty() && Utilities::StartsWith(arg, TEXT("/")) || Utilities::StartsWith(arg, TEXT("-")))
+            if (options._command.empty() && (Utilities::StartsWith(arg, TEXT("/")) || Utilities::StartsWith(arg, TEXT("-"))))
             {
                 arg = arg.Mid(1);
 
