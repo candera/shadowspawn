@@ -1,8 +1,6 @@
 # Status
 
-Shadowspawn is no longer under active development. I still run it every night on my machine, so it works fine, but I'm not planning on doing any additional coding on it. You are welcome to download and use it, and I still make an attempt to help people who are having problems with it.
-
-You are welcome to fork the project. The license (MIT) is very permissive. Indeed, if you have any interest in taking over development, give me a shout: I'd be happy to redirect people to a more actively-maintained fork.
+NO LONGER SUPPORTED. It might still work - I don't know. I don't run Windows any more. Sorry! I supported it for years but hopefully there's a fork somewhere out there. If you make one and maintain it I will be happy to post a link here. 
 
 # What Is ShadowSpawn? 
 
